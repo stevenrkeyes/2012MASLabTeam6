@@ -88,12 +88,3 @@ class robot:
         # to move balls around
 
     
-
-# class for balls on the field
-class ball:
-    def __init__(self):
-        pass
-
-    def draw(self, canvas):
-        pass
-

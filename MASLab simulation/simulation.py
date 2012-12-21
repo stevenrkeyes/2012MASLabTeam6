@@ -1,15 +1,18 @@
+# This file calls the relevant classes and makes a simulation
+#
+
 from world import *
 from robot import *
 
 # here are some walls
 w1 = wall((10,10),(490,10))
 w2 = wall((490,10),(490,450))
-w3 = wall((490,450),(450,490))
+w3 = yellowWall((490,450),(450,490))
 w4 = wall((450,490),(10,490))
 w5 = wall((10,490),(10,10))
 
 # here is a ball
-b = ball()
+b = ball((100,100), "red")
 
 # here is a robot
 r = robot((250,350))

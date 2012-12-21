@@ -217,12 +217,27 @@ class wall(Line):
 
     #draw the wall on the field
 
+class yellowWall(wall):
+    def __init__(self, startPoint, endPoint):
+        wall.__init__(self, startPoint, endPoint)
+        self.setOutline("yellow")
 
 # class for balls on the field
 class ball:
-    def __init__(self):
-        pass
+    # ball with a color and initial position
+    def __init__(self, pos, color):
+        self.pos = pos
+        self.color = color
+        
+        self.radius = 5
+        self.vel = (0,0)
 
+        self.body = Circle(Point(self.pos[0],self.pos[1]), self.radius)
+        self.body.setFill(color)
+        
     def draw(self, canvas):
-        pass
+        self.body.draw(canvas)
+        
+
+
 
