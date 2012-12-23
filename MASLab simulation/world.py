@@ -26,6 +26,24 @@ class world:
 
         (self.width, self.height) = dims
 
+        # the start of the world
+        self.startTime = time.time()
+
+    # function that returns a concise state of the field
+    # for the purpose of the simulated robot extracting
+    # simulated sensor information from it
+    def getState(self):
+        state = {"walls":self.walls,
+                 "balls":self.balls,
+                 "robot":self.robot,
+                 "timeElapsed":self.getTimeElapsed()}
+        return state
+
+    # return the time since the creation of the world in seconds
+    def getTimeElapsed(self):
+        return time.time() - self.startTime
+        
+
     def initializeDisplay(self, win):
         # make a canvas
         self.win = win
@@ -50,13 +68,19 @@ class world:
     # update the world based on the amount of time passed
     def update(self, timePassed):
         # request is (pos, dposRequested, heading, dheadingRequested); it's what the robot tries to do
-        request = self.robot.requestUpdate(timePassed)
+        request = self.robot.requestUpdate(timePassed, self.getState())
 
         # update the request to take the physics of the world into account
         request = self.updateForPhysics(request)
 
         # you should reorganize this data so it's not dumb
         self.robot.updatePos(request[1], request[3], self.canvas)
+
+        # you should implement a similar system in the case of rolling balls
+        # or even implement it better so it's less talk back-and-forth
+        # between the world class and the other classes
+        for ball in self.balls:
+            ball.update(timePassed)
         
         self.canvas.update()
 
@@ -64,10 +88,13 @@ class world:
     def updateForPhysics(self, request):
         # scalar for friction against wall
         fricScalar = .5
-        
+
+        # this is the motion that the robot would like to do
+        # pos is start point, dpos is the motion vector
         pos = request[0]
         dpos = request[1]
-        
+
+        # see what walls (if any) the robot has collided with
         collidedWall = self.checkCollisions(pos)
         # if there's a collision, push the robot back against the wall
         # also slow its movement along the wall to account for friction
@@ -213,14 +240,15 @@ class wall(Line):
                       Point(startPoint[0],startPoint[1]),
                       Point(endPoint[0],endPoint[1]))
         
-                      
-
-    #draw the wall on the field
+    # the draw(self, canvas) function is inherited
+    # from the Line class
 
 class yellowWall(wall):
     def __init__(self, startPoint, endPoint):
         wall.__init__(self, startPoint, endPoint)
-        self.setOutline("yellow")
+        self.setOutline("orange")
+        # the color yellow is actually a little hard to see
+        # maybe increase the thickness?
 
 # class for balls on the field
 class ball:
@@ -237,7 +265,10 @@ class ball:
         
     def draw(self, canvas):
         self.body.draw(canvas)
+
+    def update(self, timePassed):
+        # modify this to allow balls to roll
+        # also include stuff so that decelerate to a stop
+        # if you allow them to roll
+        pass
         
-
-
-

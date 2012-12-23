@@ -15,7 +15,7 @@ w5 = wall((10,490),(10,10))
 b = ball((100,100), "red")
 
 # here is a robot
-r = robot((250,350))
+r = robot((250,200))
 
 # simulate a world with them in it
 w = world((500,500),[w1,w2,w3,w4,w5],[b],r)

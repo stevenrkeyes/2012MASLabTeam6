@@ -8,3 +8,7 @@
 
 # let's also make a function that makes a list of walls
 # given the output of the above function
+
+# also, place the robot
+# also, place the balls
+# also, place the scoring ziggurat

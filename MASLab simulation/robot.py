@@ -16,16 +16,56 @@ def listSum(l1, l2):
     return [x+y for x,y in zip(l1,l2)]
 
 
-# class for simulation of robot body
+# class for simulation of a robot
 class robot:
-    def __init__(self, pos):
+    def demoBrain(sensorInput):
+        # get the current time
+        t = sensorInput[3]
+
+        # drive fwd for the 1st 2 seconds
+        if t<2:
+            v = (50,0,0)
+        elif t<4:
+            v = (50,-50,0)
+        elif t<6:
+            v = (50,50,0)
+        elif t<9:
+            v = (0,0,0.0005)
+        elif t<11:
+            v = (50,0,0)
+        elif t<12:
+            v = (0,0,-0.0007)
+        elif t<13:
+            v = (0,0,0)
+        else:
+            v = (50,0,0.0004)
+
+        velocities = {}
+        velocities["fwdvel"] = v[0]
+        velocities["sidevel"] = v[1]
+        velocities["angvel"] = v[2]
+        return velocities
+
+    def demoSensorInput(fieldState):
+        sensors = [fieldState["robot"].fwdvel,
+                   fieldState["robot"].sidevel,
+                   fieldState["robot"].angvel,
+                   fieldState["timeElapsed"]]
+        
+        # in 6.01, we had a datatype for sensor input.
+        # maybe i should invent more datatypes
+        return sensors
+
+    def __init__(self, pos, brain=demoBrain, sensorInput=demoSensorInput):
         # position (x,y)
         self.pos = (float(pos[0]),float(pos[1]));
         # angular heading from vertical
         self.heading = 0
         
         # the speed at which the robot is currently driving fwd
-        self.speed = 50.0
+        self.fwdvel = 50.0
+        # speed at which the robot is moving to its right
+        self.sidevel = 0.0
         # the speed at which the robot is currently rotating ccw
         self.angvel = 0.0002*math.pi/2.0;
 
@@ -37,8 +77,15 @@ class robot:
 
         # a function that defines how the robot should behave
         # by taking the robot's possible sensor inputs
-        # and suggesting outputs
-        #self.brain = brain
+        # and suggesting outputs, which should be a dictionary
+        # whose keys are "fwdvel", "sidevel", "angvel"
+        # and whose values are floats of pixels/sec
+        self.brain = brain
+
+        # a function that defines what sensor inputs the brain receives
+        self.sensorInput = sensorInput
+        # i guess the output of sensorInput can be any format
+        # as long as the brain is appropriate for that format
 
     def draw(self,canvas):
         self.body.draw(canvas)
@@ -46,10 +93,23 @@ class robot:
         #self.rightWheel.draw(canvas)
         self.indicator.draw(canvas)
 
-    def requestUpdate(self, timePassed):
-        
-        dpos = (self.speed*timePassed*math.sin(self.heading)/1000.0,
-                self.speed*timePassed*math.cos(self.heading)/1000.0)
+    # requests the brain for an update for speed controls
+    # based on the input from sensors on the field conditions
+    # and returns the requested motion of the robot; the motion
+    # will be updated by the world to account for physics
+    def requestUpdate(self, timePassed, fieldState):
+
+        # ask the brain for updates
+        directions = self.brain(self.sensorInput(fieldState))
+        self.fwdvel = directions["fwdvel"]
+        self.sidevel = directions["sidevel"]
+        self.angvel = directions["angvel"]
+
+        # make a request of what motion changes we'd like to see
+        dpos = (self.fwdvel*timePassed*math.sin(self.heading)/1000.0 \
+                + self.sidevel*timePassed*math.cos(self.heading)/1000.0,
+                self.fwdvel*timePassed*math.cos(self.heading)/1000.0 \
+                + self.sidevel*timePassed*math.sin(self.heading)/1000.0)
         dheading = self.angvel*timePassed
 
         return (self.pos, dpos, self.heading, dheading)
