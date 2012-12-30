@@ -1,6 +1,5 @@
 #include <SoftwareSerial.h>
 #include <Servo.h>
-#include <PololuQik.h>
 
 // Specify the chars for the modes
 #define motorChar 'M'
@@ -16,8 +15,9 @@
 // Defines a class that manages a stepper
 class Stepper
 {
-  public:
+  private:
     int stepPin, enablePin;
+  public:
     Stepper(int step, int enable)
     {
       stepPin = step;
@@ -37,21 +37,50 @@ class Stepper
     }
 };
 
+// Define a class that manages a motor (through the
+// Dagu 4-channel motor controller board)
+class Motor
+{
+  private:
+    int currentPin, directionPin, pwmPin;
+  public:
+    Motor(int cPin, int dPin, int pPin)
+    {
+      currentPin = cPin; // Pin to receive current value (unused in the code)
+      directionPin = dPin; // Pin to set motor direction, should be a digital pin, 22-53)
+      pwmPin = pPin; // Pin to set motor speed (should be a PWM pin, 2-13)
+      pinMode(currentPin, INPUT);
+      pinMode(directionPin, OUTPUT);
+      pinMode(pwmPin, OUTPUT);
+    }
+    void setSpeed(int s)
+    {
+      // Clamp to [-255, 255]
+      if (abs(s) > 255)
+      {
+        s = (s>0) ? 255 : -255;
+      }
+      
+      // Set direction and pwm pins
+      digitalWrite(directionPin, (s>=0)?HIGH:LOW);
+      analogWrite(pwmPin, s);
+    }
+};
 
 
-// Dynamic array of all the motor controllers
-PololuQik2s9v1** mc;
+// Dyanmic array of all the normal motors
+Motor** motors;
 // Dynamic array of all the stepper motors
-Stepper** stepper;
+Stepper** steppers;
 // Dynamic array of all the servo ports
-Servo** servo;
+Servo** servos;
 // Dynamic array of all the digital ports
 int* digitalPorts;
 // Dynamic array of all the analog ports
 int* analogPorts;
 
 // Keeps track of how many of each thing we have
-int numMCs = 0;
+int numMotors = 0;
 int numSteppers = 0;
 int numServos = 0;
 int numDigital = 0;
@@ -102,33 +131,32 @@ char serialRead()
 // Handles the motor component of initialization
 void motorInit()
 {
-  int rxPin, txPin;
-  PololuQik2s9v1* tempMC;
+  int cPin, dPin, pPin;
+  Motor* tempMotor;
   
   // Free up any allocated memory from before
   // Note: there's a memory leak here - the NewSoftSerial objects
   // never get free'd. I'm too lazy to fix it :P
-  for (int i = 0; i < numMCs; i++)
+  for (int i = 0; i < numMotors; i++)
   {
-    free(mc[i]);
+    free(motors[i]);
   }
-  free(mc);
+  free(motors);
 
   // Read in the new numMCs
-  numMCs = (int) serialRead() - 1;
+  numMotors = (int) serialRead() - 1;
   // Reallocate the array
-  mc = (PololuQik2s9v1**) malloc(sizeof(PololuQik2s9v1*) * numMCs);
-  for (int i = 0; i < numMCs; i++)
+  motors = (Motor**) malloc(sizeof(Motor*) * numMotors);
+  for (int i = 0; i < numMotors; i++)
   {
-    // Create the PololuQik object and store
+    // Create the Motor object and store
     // it in the array
-    rxPin = (int) serialRead();
-    txPin = (int) serialRead();
-    tempMC = new PololuQik2s9v1(txPin, rxPin, mcResetPin);
-    tempMC->init();
-    tempMC->getErrors();
-    tempMC->setSpeeds(0, 0);
-    mc[i] = tempMC;
+    cPin = (int) serialRead();
+    dPin = (int) serialRead();
+    pPin = (int) serialRead();
+    tempMotor = new Motor(cPin, dPin, pPin);
+    tempMotor->setSpeed(0);
+    motors[i] = tempMotor;
   }
 }
 
@@ -140,14 +168,14 @@ void stepperInit()
   // Free up the previously allocated memory
   for (int i = 0; i < numSteppers; i++)
   {
-    free(stepper[i]);
+    free(steppers[i]);
   }
-  free(stepper);
+  free(steppers);
 
   // Read in the new numSteppers
   numSteppers = (int) serialRead() - 1;
   // Reallocate the stepper array
-  stepper = (Stepper**) malloc(sizeof(Stepper*) * numSteppers);
+  steppers = (Stepper**) malloc(sizeof(Stepper*) * numSteppers);
   for (int i = 0; i < numSteppers; i++)
   {
     // Read in the dirPin, stepPin, and enablePin
@@ -155,7 +183,7 @@ void stepperInit()
     int enablePin = (int) serialRead();
     // Create the Stepper object and store it in the array
     tempStepper = new Stepper(stepPin, enablePin);
-    stepper[i] = tempStepper;
+    steppers[i] = tempStepper;
   }
 }
 
@@ -167,20 +195,20 @@ void servoInit()
   // Free up the previously allocated memory
   for (int i = 0; i < numServos; i++)
   {
-    free(servo[i]);
+    free(servos[i]);
   }
-  free(servo);
+  free(servos);
   
   // Read in the new numServos
   numServos = (int) serialRead() - 1;
   // Reallocate the servo array
-  servo = (Servo**) malloc(sizeof(Servo*) * numServos);
+  servos = (Servo**) malloc(sizeof(Servo*) * numServos);
   for (int i = 0; i < numServos; i++)
   {
     // Create the Servo object and store it in the array
     tempServo = new Servo();
     tempServo->attach((int) serialRead());
-    servo[i] = tempServo;
+    servos[i] = tempServo;
   }
 }
 
@@ -369,51 +397,21 @@ void loop()
   }
 }
 
-// Set the motor speed to s
-void setMotorSpeed(int index, int s)
-{
-  // Figure out which MC we're using
-  int mcNumber = index/2;
-  PololuQik2s9v1* curMC = (PololuQik2s9v1*) mc[mcNumber];
-
-  // We're using motor0
-  if (index % 2 == 0)
-  {
-    curMC->setM0Speed(s);
-  }
-  // We're using motor1
-  else
-  {
-    curMC->setM1Speed(s);
-  }
-}
-
-// Function called 4to handle the motor command
+// Function called to handle the motor command
 // Should read in one character to determine how many motors, 
-// followed by 1 character per motor and sets the motor speed
+// followed by 1 character per motor and set the motor speed
 // based on that.
 void moveMotors()
 {
-  if (resetCounter > 50)
-  {
-    resetCounter = 0;
-    for (int i = 0; i < numMCs; i++)
-    {
-      mc[i]->init();
-      mc[i]->getErrors();
-    }
-  }
-  
   // Read in (and cast to an int) the number of motors
   int numMotors = (int) serialRead() - 1;
   // Per motor, read in the speed and call setMotorSpeed to actually
   // set it
   for (int i = 0; i < numMotors; i++)
   {
-    char in = serialRead();
-    int s = (int) in - 1;
+    int s = ((int) serialRead()) - 1;
     // Set the motor speed for the ith motor
-    setMotorSpeed(i, s);
+    motors[i]->setSpeed(s);
   }
 }
 
@@ -427,7 +425,7 @@ void stepSteppers()
     int step = (int) serialRead() - 1;
     if (step == 1)
     {
-      stepper[i]->step(100);
+      steppers[i]->step(100);
     }
   }
 }
@@ -435,7 +433,7 @@ void stepSteppers()
 // Set the servo angle
 void setServoAngle(int index, int angle)
 {
-  servo[index]->write(angle);
+  servos[index]->write(angle);
 }
 
 // Function called to handle the servo command
