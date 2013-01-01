@@ -55,11 +55,11 @@ class Motor
     }
     void setSpeed(int s)
     {
-      // Clamp to [-255, 255]
-      if (abs(s) > 255)
-      {
-        s = (s>0) ? 255 : -255;
-      }
+      // Clamp to [-126, 127]
+      if (s < -126) s = -126;
+      else if (s > 127) s = 127;
+      // Scale to [-252, 254]
+      s *= 2;
       
       // Set direction and pwm pins
       digitalWrite(directionPin, (s>=0)?HIGH:LOW);
@@ -410,6 +410,11 @@ void moveMotors()
   for (int i = 0; i < numMotors; i++)
   {
     int s = ((int) serialRead()) - 1;
+    // Make s signed
+    if (s > 127)
+    {
+      s -= 256;
+    }
     // Set the motor speed for the ith motor
     motors[i]->setSpeed(s);
   }

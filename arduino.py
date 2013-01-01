@@ -1,7 +1,7 @@
 import sys
 sys.path.append("../../lib")
 
-import usb.core, usb.util, serial, time
+import serial, time
 import threading, thread
 
 # Class that handles communication with the arduino
@@ -21,7 +21,7 @@ class Arduino(threading.Thread):
     # Arrays for keeping track of ports
     digitalPorts = []
     analogPorts = []
-    motorControllerPorts = []
+    motorPorts = []
     stepperPorts = []
     servoPorts = []
 
@@ -148,12 +148,13 @@ class Arduino(threading.Thread):
         output += "I"
         # Motor component of initializing
         output += "M"
-        numMCs = len(self.motorControllerPorts)
-        output += chr(numMCs+1)
-        for i in range(numMCs):
-            a,b = self.motorControllerPorts[i]
-            output += chr(a)
-            output += chr(b)
+        numMotors = len(self.motorPorts)
+        output += chr(numMotors+1)
+        for i in range(numMotors):
+            current, direction, pwm = self.motorPorts[i]
+            output += chr(current)
+            output += chr(direction)
+            output += chr(pwm)
         # Stepper component of initializing
         output += "T"
         numSteppers = len(self.stepperPorts)
@@ -219,8 +220,10 @@ class Arduino(threading.Thread):
 
     # Functions to set up the components (these are called through the classes
     # below, don't call these yourself!)
-    def addMotor(self, mcObj):
-        return mcObj.addMotor()
+    def addMotor(self, currentPort, directionPort, pwmPort):
+        self.motorPorts.append((currentPort, directionPort, pwmPort))
+        self.motorSpeeds.append(0)
+        return len(self.motorSpeeds) - 1
     def addStepper(self, stepPort, enablePort):
         self.stepperPorts.append((stepPort, enablePort))
         self.stepperSteps.append(0)
@@ -233,11 +236,6 @@ class Arduino(threading.Thread):
         self.analogPorts.append(port)
         self.analogSensors.append(None)
         return len(self.analogPorts) - 1
-    def addMC(self, txPin, rxPin):
-        self.motorControllerPorts.append((rxPin, txPin))
-        self.motorSpeeds.append(0)
-        self.motorSpeeds.append(0)
-        return len(self.motorControllerPorts) - 1
     def addServo(self, port):
         self.servoPorts.append(port)
         self.servoAngles.append(0)
@@ -253,10 +251,9 @@ class Servo:
 
 # Class to interact with a motor
 class Motor:
-    def __init__(self, arduino, controller):
-        self.arduino= arduino
-        self.controller = controller
-        self.index = self.arduino.addMotor(controller)
+    def __init__(self, arduino, currentPin, directionPin, pwmPin):
+        self.arduino = arduino
+        self.index = self.arduino.addMotor(currentPin, directionPin, pwmPin)
     def setVal(self, val):
         # Modify the -126 to 127 range to be 0 to 255 for the Arduino
         val = val % 255
@@ -289,34 +286,12 @@ class AnalogSensor:
     def getValue(self):
         return self.arduino.getAnalogRead(self.index)
 
-# Class to interact with a motor controller
-class MotorController:
-    def __init__(self, arduino, txPin, rxPin):
-        self.arduino = arduino
-        self.txPin = txPin
-        self.rxPin = rxPin
-        self.index = arduino.addMC(txPin, rxPin)
-        self.numMotors = 0
-    def getIndex(self):
-        return self.index
-    def addMotor(self):
-        self.numMotors += 1
-        return self.index * 2 + self.numMotors - 1
 
 if __name__ == "__main__":
     ## Example setup for various sensors and actuators
 
     ## Set up the arduino itself (do this every time)
     a = Arduino()
-
-    ## Setting up a motor controller (txPin = 18, rxPin = 19) and two motors
-    ## on that motor controller
-    #mc0 = MotorController(a, 18, 19)
-    #m0 = Motor(a, mc0)
-    #m1 = Motor(a, mc0)
-    #mc1 = MotorController(a, 16, 17)
-    #m2 = Motor(a, mc1)
-    #m3 = Motor(a, mc1)
 
     an = AnalogSensor(a,1)
     #stepper = Stepper(a, 51, 50)
