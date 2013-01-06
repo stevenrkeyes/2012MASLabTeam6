@@ -12,15 +12,19 @@ import threading, thread
 class Arduino(threading.Thread):
 
     # Arrays for keeping track of input / output
+    digitalInputs = []
+    analogInputs = []
+    digitalOutputs = []
+    analogOutputs = []
     motorSpeeds = []
     stepperSteps = []
     servoAngles = []
-    digitalSensors = []
-    analogSensors = []
 
     # Arrays for keeping track of ports
-    digitalPorts = []
-    analogPorts = []
+    digitalInputPorts = []
+    analogInputPorts = []
+    digitalOutputPorts = []
+    analogOutputPorts = []
     motorPorts = []
     stepperPorts = []
     servoPorts = []
@@ -96,6 +100,12 @@ class Arduino(threading.Thread):
                 output += chr(int(step))
             output += "S" + chr(len(self.servoAngles) + 1)
             for i in self.servoAngles:
+                output += chr((i%255)+1) # Make it unsigned and send
+            output += "D" + chr(len(self.digitalOutputs) + 1)
+            for i in self.digitalOutputs:
+                output += chr(i+1)
+            output += "A" + chr(len(self.analogOutputs) + 1)
+            for i in self.analogOutputs:
                 output += chr(i+1)
             output += ";"
             self.port.write(output)
@@ -127,7 +137,7 @@ class Arduino(threading.Thread):
                     for i in range(length):
                         # If we read in a 2, then the bump sensor is hit,
                         # otherwise it's not
-                        self.digitalSensors[i] = ord(self.serialRead())==2
+                        self.digitalInputs[i] = ord(self.serialRead())==2
                 # Analog
                 elif (mode == 'A'):
                     length = ord(self.serialRead())-1
@@ -135,7 +145,7 @@ class Arduino(threading.Thread):
                     for i in range(length):
                         byte0 = ord(self.serialRead())-1
                         byte1 = ord(self.serialRead())-1
-                        self.analogSensors[i] = byte1 * 256 + byte0
+                        self.analogInputs[i] = byte1 * 256 + byte0
                 # End of packet
                 elif (mode == ';'):
                     done = True
@@ -169,19 +179,30 @@ class Arduino(threading.Thread):
         output += chr(numServos+1)
         for i in range(numServos):
             output+= chr(self.servoPorts[i])
-        # Digital component of initializing
-        output += "D"
-        numDigital = len(self.digitalPorts)
-        print "numDigital: {0}".format(numDigital)
+        # Digital input component of initializing
+        output += "DI"
+        numDigital = len(self.digitalInputPorts)
         output += chr(numDigital+1)
         for i in range(numDigital):
-            output+= chr(self.digitalPorts[i])
-        # Analog component of initializing
-        output += "A"
-        numAnalog = len(self.analogPorts)
+            output+= chr(self.digitalInputPorts[i])
+        # Analog input component of initializing
+        output += "AI"
+        numAnalog = len(self.analogInputPorts)
         output += chr(numAnalog+1)
         for i in range(numAnalog):
-            output += chr(self.analogPorts[i])
+            output += chr(self.analogInputPorts[i])
+        # Digital output component of initializing
+        output += "DO"
+        numDigital = len(self.digitalOutputPorts)
+        output += chr(numDigital+1)
+        for i in range(numDigital):
+            output+= chr(self.digitalOutputPorts[i])
+        # Analog input component of initializing
+        output += "AO"
+        numAnalog = len(self.analogOutputPorts)
+        output += chr(numAnalog+1)
+        for i in range(numAnalog):
+            output += chr(self.analogOutputPorts[i])
         # Terminate the command packet
         output += ";"
 
@@ -211,11 +232,25 @@ class Arduino(threading.Thread):
         self.stepperSteps[stepperNum] = step
     def setServoAngle(self, servoNum, angle):
         self.servoAngles[servoNum] = angle
-    def getDigitalRead(self, index):
-        out = self.digitalSensors[index]
+    def setDigitalOutput(self, index, value):
+        # Digitize value
+        if value == 0:
+            self.digitalOutputs[index] = 0
+        else:
+            self.digitalOutputs[index] = 1
+    def setAnalogOutput(self, index, value):
+        # Clamp value to [0, 1]
+        if value <= 0:
+            self.digitalOutputs[index] = 0
+        elif value >= 1:
+            self.digitalOutputs[index] = 1
+        else:
+            self.digitalOutputs[index] = value
+    def getDigitalInput(self, index):
+        out = self.digitalInputs[index]
         return out
-    def getAnalogRead(self, index):
-        out = self.analogSensors[index]
+    def getAnalogInput(self, index):
+        out = self.analogInputs[index]
         return out
 
     # Functions to set up the components (these are called through the classes
@@ -228,14 +263,22 @@ class Arduino(threading.Thread):
         self.stepperPorts.append((stepPort, enablePort))
         self.stepperSteps.append(0)
         return len(self.stepperPorts) - 1
-    def addDigitalPort(self, port):
-        self.digitalPorts.append(port)
-        self.digitalSensors.append(None)
-        return len(self.digitalPorts) - 1
-    def addAnalogPort(self, port):
-        self.analogPorts.append(port)
-        self.analogSensors.append(None)
-        return len(self.analogPorts) - 1
+    def addDigitalInput(self, port):
+        self.digitalInputPorts.append(port)
+        self.digitalInputs.append(None)
+        return len(self.digitalInputPorts) - 1
+    def addAnalogInput(self, port):
+        self.analogInputPorts.append(port)
+        self.analogInputs.append(None)
+        return len(self.analogInputPorts) - 1
+    def addDigitalOutput(self, port):
+        self.digitalOutputPorts.append(port)
+        self.digitalOutputs.append(0)
+        return len(self.digitalOutputPorts) - 1
+    def addAnalogOutput(self, port):
+        self.analogOutputPorts.append(port)
+        self.analogOutputs.append(0)
+        return len(self.digitalOutputPorts) - 1
     def addServo(self, port):
         self.servoPorts.append(port)
         self.servoAngles.append(0)
@@ -244,7 +287,7 @@ class Arduino(threading.Thread):
 # Class to interact with a servo
 class Servo:
     def __init__(self, arduino, port):
-        self.arduino = arduino 
+        self.arduino = arduino
         self.index = self.arduino.addServo(port)
     def setAngle(self, angle):
         self.arduino.setServoAngle(self.index, angle)
@@ -269,78 +312,37 @@ class Stepper:
         self.arduino.stepStepper(self.index, step)
 
 # Class to interact with a digital sensor
-class DigitalSensor:
+class DigitalInput:
     def __init__ (self, arduino, port):
         self.arduino = arduino
         self.port = port
-        self.index = self.arduino.addDigitalPort(port)
+        self.index = self.arduino.addDigitalInput(port)
     def getValue(self):
-        return self.arduino.getDigitalRead(self.index)
+        return self.arduino.getDigitalInput(self.index)
 
 # Class to interact with an analog sensor
-class AnalogSensor:
+class AnalogInput:
     def __init__(self, arduino, port):
         self.arduino = arduino
         self.port = port
-        self.index = self.arduino.addAnalogPort(port)
+        self.index = self.arduino.addAnalogInput(port)
     def getValue(self):
-        return self.arduino.getAnalogRead(self.index)
+        return self.arduino.getAnalogInput(self.index)
 
+# Class to interact with a digital output
+class DigitalOutput:
+    def __init__ (self, arduino, port):
+        self.arduino = arduino
+        self.port = port
+        self.index = self.arduino.addDigitalOutput(port)
+    def setValue(self, value):
+        self.arduino.setDigitalOutput(self.index, value)
 
-if __name__ == "__main__":
-    ## Example setup for various sensors and actuators
-
-    ## Set up the arduino itself (do this every time)
-    a = Arduino()
-
-    an = AnalogSensor(a,1)
-    #stepper = Stepper(a, 51, 50)
-
-    #d1 = DigitalSensor(a, 22)
-    #d2 = DigitalSensor(a, 24)
-    #d3 = DigitalSensor(a, 26)
-    #d4 = DigitalSensor(a, 28)
-
-
-    a.run()
-
-    #stepper.step(1)
-
-    while True:
-    #    print [d1.getValue(), d2.getValue(), d3.getValue(), d4.getValue()]
-        print an.getValue()
-        time.sleep(0.1)
-
-
-## Setting up a digital sensor on digital port 2
-#d = DigitalSensor(a, 2)
-## Setting up a servo on digital port 1
-#s = Servo(a, 1)
-#analog = AnalogSensor(a, 2)
-#a.run()
-
-## Example code snippets for things to do with the various sensors and
-## actuators
-
-## Set motor speeds
-#m0.setVal(-50)
-#m1.setVal(-50)
-
-## Read analog values
-#while True:
-#    time.sleep(0.1)
-#    print analog.getValue()
-
-## Set servo angles
-#while True:
-#    for i in range(100):
-#        s.setAngle(i)
-#        time.sleep(0.01)
-#    for i in range(100, 0, -1):
-#        s.setAngle(i)
-#        time.sleep(0.01)
-
-## Get digital sensor input
-#    while val == None:
-#        val = d.getValue()
-#    print val
+# Class to interact with an analog output
+class AnalogOutput:
+    def __init__ (self, arduino, port):
+        self.arduino = arduino
+        self.port = port
+        self.index = self.arduino.addAnalogOutput(port)
+    def setValue(self, value):
+        self.arduino.setAnalogOutput(self.index, value)

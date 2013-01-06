@@ -7,10 +7,10 @@
 #define servoChar 'S'
 #define digitalChar 'D'
 #define analogChar 'A'
+#define inputChar 'I' // For digital/analog input vs. output (init only)
+#define outputChar 'O' // For digital/analog input vs. output (init only)
 #define initChar 'I'
 #define doneChar ';'
-// The motor controller reset pin (not currently used)
-#define mcResetPin 53
 
 // Defines a class that manages a stepper
 class Stepper
@@ -75,16 +75,20 @@ Stepper** steppers;
 // Dynamic array of all the servo ports
 Servo** servos;
 // Dynamic array of all the digital ports
-int* digitalPorts;
+int* digitalInputPorts;
+int* digitalOutputPorts;
 // Dynamic array of all the analog ports
-int* analogPorts;
+int* analogInputPorts;
+int* analogOutputPorts;
 
 // Keeps track of how many of each thing we have
 int numMotors = 0;
 int numSteppers = 0;
 int numServos = 0;
-int numDigital = 0;
-int numAnalog = 0;
+int numDigitalInput = 0;
+int numDigitalOutput = 0;
+int numAnalogInput = 0;
+int numAnalogOutput = 0;
 
 int resetCounter = 0;
 
@@ -213,25 +217,78 @@ void servoInit()
 }
 
 // Handles the digital sensor initialization
-void digitalInit()
+void digitalInputInit()
 {
-  numDigital = (int) serialRead() - 1;
-  digitalPorts = (int*) malloc (sizeof(int) * numDigital);
-  for (int i = 0; i < numDigital; i++)
+  numDigitalInput = (int) serialRead() - 1;
+  digitalInputPorts = (int*) malloc (sizeof(int) * numDigitalInput);
+  for (int i = 0; i < numDigitalInput; i++)
   {
-    digitalPorts[i] = (int) serialRead();
+    digitalInputPorts[i] = (int) serialRead();
+    pinMode(digitalInputPorts[i], INPUT);
   }
-  
+}
+// Handles the digital output initialization
+void digitalOutputInit()
+{
+  numDigitalOutput = (int) serialRead() - 1;
+  digitalOutputPorts = (int*) malloc (sizeof(int) * numDigitalOutput);
+  for (int i = 0; i < numDigitalOutput; i++)
+  {
+    digitalOutputPorts[i] = (int) serialRead();
+    pinMode(digitalOutputPorts[i], OUTPUT);
+  }
 }
 
 // Handles the analog sensor initialization
+void analogInputInit()
+{
+  numAnalogInput = (int) serialRead() - 1;
+  analogInputPorts = (int*) malloc (sizeof(int) * numAnalogInput);
+  for (int i = 0; i < numAnalogInput; i++)
+  {
+    analogInputPorts[i] = (int) serialRead();
+    pinMode(analogInputPorts[i], INPUT);
+  }
+}
+// Handles the analog output initialization
+void analogOutputInit()
+{
+  numAnalogOutput = (int) serialRead() - 1;
+  analogOutputPorts = (int*) malloc (sizeof(int) * numAnalogOutput);
+  for (int i = 0; i < numAnalogOutput; i++)
+  {
+    analogOutputPorts[i] = (int) serialRead();
+    pinMode(analogOutputPorts[i], OUTPUT);
+  }
+}
+
+// Dispatches digital input/output init based on next char
+void digitalInit()
+{
+  char mode;
+  mode = serialRead();
+  if (mode == inputChar)
+  {
+    digitalInputInit();
+  }
+  else
+  {
+    digitalOutputInit();
+  }
+}
+
+// Dispatches analog input/output init based on next char
 void analogInit()
 {
-  numAnalog = (int) serialRead() - 1;
-  analogPorts = (int*) malloc (sizeof(int) * numAnalog);
-  for (int i = 0; i < numAnalog; i++)
+  char mode;
+  mode = serialRead();
+  if (mode == inputChar)
   {
-    analogPorts[i] = (int) serialRead();
+    analogInputInit();
+  }
+  else
+  {
+    analogOutputInit();
   }
 }
 
@@ -269,7 +326,7 @@ void initAll()
   // then 2 bytes for 'Am', 2*numAnalog bytes because each analog
   // input is 2 bytes long. Finally, 2 bytes for the ';' and the
   // null character at the end.
-  retVal = (char*) malloc(((2+numDigital) + (2+2*numAnalog) + 2) * sizeof(char));
+  retVal = (char*) malloc(((2+numDigitalInput) + (2+2*numAnalogInput) + 2) * sizeof(char));
   retIndex = 0;
 }
 
@@ -334,6 +391,14 @@ void loop()
           // angles
           moveServos();
           break;
+
+        case digitalChar:
+	  digitalOutput();
+	  break;
+
+        case analogChar:
+	  analogOutput();
+	  break;
   
         case doneChar:
           // We're done reading in input from python
@@ -350,13 +415,13 @@ void loop()
     writeToRetVal(digitalChar);
     // Add the number of sensors
     // Add 1 because 0 terminates the string
-    writeToRetVal((char) numDigital+1);
+    writeToRetVal((char) numDigitalInput+1);
     // Add all the sensor data
-    for (int i = 0; i < numDigital; i++)
+    for (int i = 0; i < numDigitalInput; i++)
     {
       // Digital read the ith sensor and add it's value to retVal
       // We add 1 to the value because 0 would terminate the string
-      writeToRetVal((char) digitalRead(digitalPorts[i])+1);
+      writeToRetVal((char) digitalRead(digitalInputPorts[i])+1);
     }
 
     // Write analog data
@@ -364,12 +429,12 @@ void loop()
     writeToRetVal(analogChar);
     // Add the number of sensors
     // Add 1 because 0 terminates the string
-    writeToRetVal((char) numAnalog + 1);
+    writeToRetVal((char) numAnalogInput + 1);
     // Add all the sensor data
-    for (int i = 0; i < numAnalog; i++)
+    for (int i = 0; i < numAnalogInput; i++)
     {
       // Analog read the ith sensor and decompose into two bytes
-      int analogVal = analogRead(analogPorts[i]);
+      int analogVal = analogRead(analogInputPorts[i]);
       unsigned char byte0 = analogVal % 256;
       unsigned char byte1 = analogVal / 256;
       // Do a little tweaking to make sure we don't send a null byte
@@ -454,9 +519,37 @@ void moveServos()
   for (int i = 0; i < numServos; i++)
   {
     // Set the servo angle for the ith motor
-    setServoAngle(i, (int) serialRead() - 1);
+    int in = (int) serialRead() - 1;
+    if (in >= 128) // Make it signed
+    {
+      in -= 255;
+    }
+    // Scale to [-180, 180]
+    in *= (180.0/128.0);
+    setServoAngle(i, in);
   }
 }
 
-
-
+void digitalOutput()
+{
+  // Read in (and cast to an int) the number of digital outputs
+  int numDigitalOutputs = (int) serialRead() - 1;
+  // Per output, read in the value, and set the digital pin
+  for (int i = 0; i < numDigitalOutputs; i++)
+  {
+      // Write the digital output
+      int val = (int) serialRead() - 1;
+      digitalWrite(digitalOutputPorts[i], (val==0) ? LOW : HIGH);
+  }
+}
+void analogOutput()
+{
+  // Read in (and cast to an int) the number of analog outputs
+  int numAnalogOutputs = (int) serialRead() - 1;
+  // Per output, read in the value, and set the analog pin
+  for (int i = 0; i < numAnalogOutputs; i++)
+  {
+      // Write the analog output
+      analogWrite(analogOutputPorts[i], (int)serialRead());
+  }
+}
