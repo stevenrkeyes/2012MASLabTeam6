@@ -135,8 +135,7 @@ class Arduino(threading.Thread):
                     length = ord(self.serialRead())-1
                     # Fill the digitalSensors array with incoming data
                     for i in range(length):
-                        # If we read in a 2, then the bump sensor is hit,
-                        # otherwise it's not
+                        # If we read in a 2, then the digital input is HIGH
                         self.digitalInputs[i] = ord(self.serialRead())==2
                 # Analog
                 elif (mode == 'A'):
