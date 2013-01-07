@@ -296,10 +296,15 @@ class Motor:
     def __init__(self, arduino, currentPin, directionPin, pwmPin):
         self.arduino = arduino
         self.index = self.arduino.addMotor(currentPin, directionPin, pwmPin)
-    def setVal(self, val):
+    def setSpeed(self, speed):
+        # Clamp to [-126, 126]
+        if speed < -126:
+            speed = -126
+        elif speed > 126:
+            speed = 126
         # Modify the -126 to 127 range to be 0 to 255 for the Arduino
-        val = val % 255
-        self.arduino.setMotorSpeed(self.index, val)
+        speed = speed % 255
+        self.arduino.setMotorSpeed(self.index, speed)
 
 class Stepper:
     def __init__(self, arduino, stepPort, enablePort):

@@ -63,7 +63,7 @@ class Motor
       
       // Set direction and pwm pins
       digitalWrite(directionPin, (s>=0)?HIGH:LOW);
-      analogWrite(pwmPin, s);
+      analogWrite(pwmPin, abs(s));
     }
 };
 
