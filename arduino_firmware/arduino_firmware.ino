@@ -550,6 +550,6 @@ void analogOutput()
   for (int i = 0; i < numAnalogOutputs; i++)
   {
       // Write the analog output
-      analogWrite(analogOutputPorts[i], (int)serialRead());
+      analogWrite(analogOutputPorts[i], ((int)serialRead() - 1)*(1023.0/255.0));
   }
 }
