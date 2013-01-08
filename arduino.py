@@ -100,7 +100,7 @@ class Arduino(threading.Thread):
                 output += chr(int(step))
             output += "S" + chr(len(self.servoAngles) + 1)
             for i in self.servoAngles:
-                output += chr((i%255)+1) # Make it unsigned and send
+                output += chr(i+1) # Make it unsigned and send
             output += "D" + chr(len(self.digitalOutputs) + 1)
             for i in self.digitalOutputs:
                 output += chr(i+1)
@@ -289,6 +289,11 @@ class Servo:
         self.arduino = arduino
         self.index = self.arduino.addServo(port)
     def setAngle(self, angle):
+        # Clamp to [0, 180]
+        if angle < 0:
+            angle = 0
+        elif angle > 180:
+            angle = 180
         self.arduino.setServoAngle(self.index, angle)
 
 # Class to interact with a motor

@@ -500,12 +500,6 @@ void stepSteppers()
   }
 }
 
-// Set the servo angle
-void setServoAngle(int index, int angle)
-{
-  servos[index]->write(angle);
-}
-
 // Function called to handle the servo command
 // Should read in one character to determine how many servos,
 // followed by 1 character per servo, setting the servo angle
@@ -520,13 +514,7 @@ void moveServos()
   {
     // Set the servo angle for the ith motor
     int in = (int) serialRead() - 1;
-    if (in >= 128) // Make it signed
-    {
-      in -= 255;
-    }
-    // Scale to [-180, 180]
-    in *= (180.0/128.0);
-    setServoAngle(i, in);
+    servos[i]->write(in);
   }
 }
 
