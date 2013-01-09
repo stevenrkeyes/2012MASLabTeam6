@@ -20,5 +20,5 @@ while True:
     for i in range(120, 0, -10):
         servo.setAngle(i)
         print "Angle", i
-        time.slee(0.1)
+        time.sleep(0.1)
     
