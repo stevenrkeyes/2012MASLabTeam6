@@ -1,10 +1,9 @@
 import cv
 import time
 
-def findObjects(lowerHSV=cv.Scalar(120,50,130), upperHSV=cv.Scalar(160,255,255), image="foo.jpg", blurNum=21):
+def findObjects(img=cv.LoadImageM("foo.jpg"), lowerHSV=cv.Scalar(120,50,130), upperHSV=cv.Scalar(160,255,255) , blurNum=21):
 	stt=time.time()
 	# Load example image
-	img = cv.LoadImageM(image)
 	# print type(img)
 	#initialize images (same size and type)
 	img_hsv = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_8U, 3)
@@ -18,7 +17,9 @@ def findObjects(lowerHSV=cv.Scalar(120,50,130), upperHSV=cv.Scalar(160,255,255),
 	cv.InRangeS(img_hsv, lowerHSV, upperHSV, img_threshold)
 	# Detect Contors, create list
 	first_contour = cv.FindContours(img_threshold, cv.CreateMemStorage())
-	cv.DrawContours(img_threshold, first_contour, cv.Scalar(180,255,255), cv.Scalar(100,200,200), 1, 5)
+	# cv.DrawContours(img_threshold, first_contour, cv.Scalar(180,255,255), cv.Scalar(100,200,200), 1, 5)
+	if len(first_contour) == 0:
+		return ()
 	contours = [first_contour]
 	next = first_contour.h_next()
 	while next:
@@ -31,6 +32,8 @@ def findObjects(lowerHSV=cv.Scalar(120,50,130), upperHSV=cv.Scalar(160,255,255),
 	for contour in contours:
 		if len(contour) > cv.GetSize(img)[0]/7: # size of contour depends on size of image
 			important_contours.append(contour)
+	if important_contours == []:
+		return ()
 	# Test Code
 	# print sorted(list(important_contours))
 	# print sorted(list(important_contours[0]))
