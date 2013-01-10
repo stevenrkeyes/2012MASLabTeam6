@@ -17,20 +17,21 @@ def followBall(cam):
 		if currentSize > maxSize:
 			biggestBall = ball
 			maxSize = currentSize
-	if biggestBall == ():
-		print "no Ball, LOL"
-	elif 0 <= biggestBall[0] < line25Percent:
-		print "x coord: ", biggestBall[0]
-		print "move far right"
-	elif line25Percent <= biggestBall[0] < midlineHorizontal:
-		print "x coord: ", biggestBall[0]	
-		print "move somewhat right"
-	elif midlineHorizontal <= biggestBall[0] < line75Percent:
-		print "x coord: ", biggestBall[0]
-		print "move somewhat left"
-	elif line75Percent <= biggestBall[0] < feed.width:
-		print "x coord: ", biggestBall[0]
-		print "move far left"
+	# Debug/Test code
+	#if biggestBall == ():
+	#	print "no Ball, LOL"
+	#elif 0 <= biggestBall[0] < line25Percent:
+	#	print "x coord: ", biggestBall[0]
+	#	print "move far right"
+	#elif line25Percent <= biggestBall[0] < midlineHorizontal:
+	#	print "x coord: ", biggestBall[0]	
+	#	print "move somewhat right"
+	#elif midlineHorizontal <= biggestBall[0] < line75Percent:
+	#	print "x coord: ", biggestBall[0]
+	#	print "move somewhat left"
+	#elif line75Percent <= biggestBall[0] < feed.width:
+	#	print "x coord: ", biggestBall[0]
+	#	print "move far left"
 	output = biggestBall
 	output.append(feed.width)
 	output.append(feed.height)
