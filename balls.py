@@ -32,9 +32,7 @@ def followBall(cam):
 	#elif line75Percent <= biggestBall[0] < feed.width:
 	#	print "x coord: ", biggestBall[0]
 	#	print "move far left"
-	output = biggestBall
-	output.append(feed.width)
-	output.append(feed.height)
+	output = biggestBall + (feed.width, feed.height)
 	return output
 
 if __name__ == "__main__":
