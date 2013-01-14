@@ -21,8 +21,11 @@ def pidShit(ypos, ysize, errors)
 
 counterBallNotSeen = 0
 while True:
+	detectWall = False
 	temp=balls.followBall(cam)
-	if len(temp)>2:
+	if (detectWall):
+		pass #Avoid Wall
+	elif len(temp)>2:
 		counter = 
 		camwidth=temp[4]
 		camheight=temp[5]
