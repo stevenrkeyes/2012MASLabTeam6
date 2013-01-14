@@ -13,17 +13,17 @@ def pidShit(ypos, ysize, errors)
 	integral = 0
 	for error in errors:
 		integral += error
-	Kp = 0 # Set
-	Ki = 0 # These
-	Kd = 0 # Values
+	Kp = 1/50 # Set
+	Ki = 1/50 # These
+	Kd = 1/50 # Values
 	PID = (Kp * currentError) + (Kd * derivative) + (Ki * integral)
 	return PID
 
 counterBallNotSeen = 0
-while True:
-	detectWall = False
+while time.time() < begintime + 180:
+	detectWall = False		# Implement this code	
 	temp=balls.followBall(cam)
-	if (detectWall):
+	if (detectWall):		# later, when I figure out IR
 		pass #Avoid Wall
 	elif len(temp)>2:
 		counter = 
