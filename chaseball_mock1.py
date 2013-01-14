@@ -20,11 +20,12 @@ def pidShit(ypos, ysize, errors)
 	return PID
 
 counterBallNotSeen = 0
+listOfErrors = (0)
 while time.time() < begintime + 180:
 	detectWall = False		# Implement this code	
 	temp=balls.followBall(cam)
 	if (detectWall):		# later, when I figure out IR
-		pass #Avoid Wall
+		pass 		#Avoid Wall
 	elif len(temp)>2:
 		counter = 
 		camwidth=temp[4]
@@ -32,9 +33,11 @@ while time.time() < begintime + 180:
 		if (temp[0] > camwidth):
 			motors.forward(50 - pidShit(temp[0]-camwidth, camwidth, listOfErrors), 50)
 			print "turning right"
+			listofErrors += temp[0]-camwidth
 		else
 			motors.forward(50, 50 - pidShit(temp[0], camwidth, listOfErrors))
 			print "turning left"
+			listOfErrors += -temp[0]
 		print str(camheight) + "Camheight"
 		chaseBall(temp[0])
 	else:
