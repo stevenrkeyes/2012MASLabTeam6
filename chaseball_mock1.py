@@ -1,21 +1,21 @@
-import arduino, balls, rectangulate, drive2
-
+import arduino, balls, rectangulate, drive2, time, cv
+ 
 begintime = time.time()
 ard = arduino.Arduino()
 motors = drive2.DrivePeg(ard)
 
 cam = cv.CaptureFromCAM(1)
 
-def pidShit(ypos, ysize, errors)
+def pidShit(ypos, ysize, errors):
 	previousError = errors[len(errors) - 1]
 	currentError = ypos - ysize
 	derivative = previousError - currentError
 	integral = 0
 	for error in errors:
 		integral += error
-	Kp = 1/50 # Set
-	Ki = 1/50 # These
-	Kd = 1/50 # Values
+	Kp = 60/ysize # Set
+	Ki = (60/ysize) * 1.5 # These
+	Kd = (60/ysize) / 10 # Values
 	PID = (Kp * currentError) + (Kd * derivative) + (Ki * integral)
 	return PID
 
@@ -27,27 +27,29 @@ while time.time() < begintime + 180:
 	if (detectWall):		# later, when I figure out IR
 		pass 		#Avoid Wall
 	elif len(temp)>2:
-		counter = 
+		counter = 0
 		camwidth=temp[4]
 		camheight=temp[5]
 		if (temp[0] > camwidth):
-			motors.forward(50 - pidShit(temp[0]-camwidth, camwidth, listOfErrors), 50)
+			motors.forward(50, 50 - pidShit(temp[0]-camwidth, camwidth, listOfErrors))
 			print "turning right"
 			listofErrors += temp[0]-camwidth
-		else
-			motors.forward(50, 50 - pidShit(temp[0], camwidth, listOfErrors))
+		else:
+			motors.forward(50 - pidShit(temp[0], camwidth, listOfErrors, 50))
 			print "turning left"
 			listOfErrors += -temp[0]
 		print str(camheight) + "Camheight"
 		chaseBall(temp[0])
 	else:
+		motors.stopMotors()
 		print "Nope"
 		counter+= 1
-		if (counter >= 6)
+		if (counter >= 6):
 			motors.turn(50, .3)
 			print "searching..."
 
-
+motors.stopMotors()
+ard.stop()
 
 
 
