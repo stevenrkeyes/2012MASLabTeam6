@@ -3,25 +3,26 @@ import arduino, balls, rectangulate, drive2, time, cv
 begintime = time.time()
 ard = arduino.Arduino()
 motors = drive2.DrivePeg(ard)
-
+counter = 0
 cam = cv.CaptureFromCAM(1)
+listOfErrors = [0]
 
-def pidShit(ypos, ysize, errors):
+def pidShit(xpos, xsize, errors):
 	previousError = errors[len(errors) - 1]
-	currentError = ypos - ysize
+	currentError = xsize/2 - xpos
 	derivative = previousError - currentError
 	integral = 0
 	for error in errors:
 		integral += error
-	Kp = 60/ysize # Set
-	Ki = (60/ysize) * 1.5 # These
-	Kd = (60/ysize) / 10 # Values
-	PID = (Kp * currentError) + (Kd * derivative) + (Ki * integral)
-	return PID
+	Kp = 3.0/xsize # Set
+	Ki = (3.0/xsize) * 1.5 # These
+	Kd = (3.0/xsize) / 5 # Values
+	PID = int((Kp * currentError) + (Kd * derivative) + (Ki * integral))
+	print PID, "PID"	
+	return abs(PID)
 
 counterBallNotSeen = 0
-listOfErrors = (0)
-while time.time() < begintime + 180:
+while time.time() < (begintime + 180):
 	detectWall = False		# Implement this code	
 	temp=balls.followBall(cam)
 	if (detectWall):		# later, when I figure out IR
@@ -30,24 +31,27 @@ while time.time() < begintime + 180:
 		counter = 0
 		camwidth=temp[4]
 		camheight=temp[5]
-		if (temp[0] > camwidth):
-			motors.forward(50, 50 - pidShit(temp[0]-camwidth, camwidth, listOfErrors))
+		if (temp[0] > (camwidth/2)):
+			motors.forward(80 - int(pidShit((temp[0]-camwidth), camwidth, listOfErrors)), 80)
+			time.sleep(.1)
 			print "turning right"
-			listofErrors += temp[0]-camwidth
 		else:
-			motors.forward(50 - pidShit(temp[0], camwidth, listOfErrors, 50))
+			motors.forward(80, 80 - int(pidShit(temp[0], camwidth, listOfErrors)))
 			print "turning left"
-			listOfErrors += -temp[0]
-		print str(camheight) + "Camheight"
-		chaseBall(temp[0])
+			time.sleep(.1)
+		listOfErrors.append((camwidth/2) - temp[0])
+		#print str(camheight) + "Camheight"
+
 	else:
 		motors.stopMotors()
 		print "Nope"
 		counter+= 1
 		if (counter >= 6):
-			motors.turn(50, .3)
+			motors.turn(80, 0.2)
 			print "searching..."
-
+			counter = 0
+			listOfErrors = [0]
+	#print "time", str(time.time() - begintime)
 motors.stopMotors()
 ard.stop()
 

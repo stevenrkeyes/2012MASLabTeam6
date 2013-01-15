@@ -12,16 +12,17 @@ class DrivePeg:
 
 		# Forward unlimited at speed "power"
         def forward(self, power1, power2):
-                self.m0.setSpeed(power1)
-                self.m1.setSpeed(power2)
+                self.m0.setSpeed(-power1)
+                self.m1.setSpeed(-power2)
+		time.sleep(0.1)
                 
         # Backward unlimited at speed "power"
         def backward(self, power):
-                self.forward(-power)
+                self.forward(power)
 
         # Drive forward at speed "power" and time "t" (ms)
-        def forwardTime(self, power, t):
-                self.forward(power)
+        def forwardTime(self, power1, power2, t):
+                self.forward(power1, power2)
                 time.sleep(t)
                 self.stopMotors()
 
