@@ -36,6 +36,6 @@ def followBall(cam):
 	return output
 
 if __name__ == "__main__":
-	cam = cv.CaptureFromCAM(0)
+	cam = cv.CaptureFromCAM(-1)
 	while True:
 		followBall(cam)
