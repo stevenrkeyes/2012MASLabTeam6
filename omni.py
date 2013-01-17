@@ -4,7 +4,7 @@ import math
 
 
 l=0.15
-W=sqrt(0.084914-0.466*l+l*l)
+W=math.sqrt(0.084914-0.466*l+l*l)
 sina=0.175/W
 
 

@@ -57,7 +57,7 @@ class powerMonitorController:
 		t.start()
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
 	ard = arduino.Arduino()  # Create the Arduino object
 	monCon = powerMonitorController(ard) # initialize a controller for checking the power
 	
