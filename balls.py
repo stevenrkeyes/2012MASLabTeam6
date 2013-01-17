@@ -1,8 +1,16 @@
 import cv, rectangulate
-def followBall(cam):
+def readBallData():
+	data = []
+	f = open("HSV_BALL.data", 'r')
+	for line in f:
+		data.append(int(float(line.strip())))
+	f.close()
+	output=[(data[0], data[1], data[2]), (data[3], data[4], data[5])]
+	return output
+def followBall(cam, lowerHSV, upperHSV):
 	# Capture camera frame and find balls
 	feed = cv.QueryFrame(cam)
-	balls = rectangulate.findObjects(feed)
+	balls = rectangulate.findObjects(feed, lowerHSV, upperHSV)
 	line25Percent = feed.width/4
 	midlineHorizontal = feed.width/2
 	line75Percent = line25Percent * 3
@@ -36,6 +44,6 @@ def followBall(cam):
 	return output
 
 if __name__ == "__main__":
-	cam = cv.CaptureFromCAM(-1)
+	cam = cv.CaptureFromCAM(1)
 	while True:
 		followBall(cam)

@@ -1,7 +1,7 @@
 import cv
 import time
 
-def findObjects(img=cv.LoadImageM("foo.jpg"), lowerHSV=cv.Scalar(100,120,100), upperHSV=cv.Scalar(130,160,255) , blurNum=21):
+def findObjects(img=cv.LoadImageM("foo.jpg"), lowerHSV=cv.Scalar(116,155,79), upperHSV=cv.Scalar(119,198,180) , blurNum=21):
 	stt=time.time()
 	# Load example image
 	# print type(img)

@@ -8,7 +8,6 @@ class DrivePeg:
         def __init__(self, ard):
                 self.m0 = arduino.Motor(ard, 2, 3, 4)
                 self.m1 = arduino.Motor(ard, 5, 6, 7)
-                ard.run()
 
 		# Forward unlimited at speed "power"
         def forward(self, power1, power2):
