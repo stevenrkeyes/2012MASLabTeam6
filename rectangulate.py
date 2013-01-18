@@ -48,7 +48,7 @@ def findObjects(img=cv.LoadImageM("foo.jpg"), lowerHSV=cv.Scalar(116,155,79), up
 	output = []
 	for rectangle in rectangles:
 		output.append((rectangle[0]+ (rectangle[2]/2), rectangle[1] + (rectangle[3]/2), rectangle[2], rectangle[3]))
-	return output
+	return output #X, Y, Width, Height
 
 	# for debugging
 	# cv.SaveImage("lol2.png", img_threshold)

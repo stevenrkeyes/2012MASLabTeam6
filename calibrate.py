@@ -1,7 +1,7 @@
 import cv, time
 
 if __name__ == "__main__":
-	cam = cv.CaptureFromCAM(1)
+	cam = cv.CaptureFromCAM(0)
 	while True:
 		feed = cv.QueryFrame(cam)
 		proportion = feed.width/640

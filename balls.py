@@ -44,6 +44,7 @@ def followBall(cam, lowerHSV, upperHSV):
 	return output
 
 if __name__ == "__main__":
-	cam = cv.CaptureFromCAM(1)
+	cam = cv.CaptureFromCAM(0)
+	values = readBallData()
 	while True:
-		followBall(cam)
+		followBall(cam, values[0], values[1])
