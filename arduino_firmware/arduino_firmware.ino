@@ -1,8 +1,6 @@
 #include <SoftwareSerial.h>
 #include <Servo.h>
 #include <Wire.h>
-#include <HMC5883L.h>
-#include <ADXL345.h>
 
 // Specify the chars for the modes
 #define motorChar 'M'
@@ -84,13 +82,6 @@ int* digitalOutputPorts;
 // Dynamic array of all the analog ports
 int* analogInputPorts;
 int* analogOutputPorts;
-// Fixed compass and accelerometer objects, and other variables
-// that go with them
-HMC5883L compass;
-ADXL345 acc;
-const float alpha = 0.5;
-double fXg = 0, fYg = 0, fZg = 0;
-
 // Keeps track of how many of each thing we have
 int numMotors = 0;
 int numSteppers = 0;
@@ -270,24 +261,6 @@ void analogInit()
   }
 }
 
-// Initialize the IMU on the I2C interface
-void imuInit()
-{
-  // Initialize the I2C interface
-  Wire.begin();
-  
-  // Set up the HMC5883L compass
-  compass = HMC5883L();
-  compass.SetScale(1.3);
-  compass.SetMeasurementMode(Measurement_Continuous);
-  
-  // Set up the ADXL345 accelerometer
-  acc.begin();
-  
-  // Update numImus, so we know to start sending IMU data back
-  numImus = 1;
-}
-
 // Init function which is run whenever the python code needs to
 // initialize all of the ports for our sensors and actuators
 void initAll()
@@ -313,9 +286,6 @@ void initAll()
         break;
       case analogChar:
         analogInit();
-        break;
-      case imuChar:
-        imuInit();
         break;
     }
   }
@@ -443,32 +413,6 @@ void loop()
       // Write the two bytes to the retVal, byte0 first
       Serial.write(byte0);
       Serial.write(byte1);
-    }
-    
-    // Write IMU data
-    if (numImus > 0)
-    {
-      // Add mode character
-      Serial.write(imuChar);
-      // Get compass heading
-      MagnetometerScaled scaled = compass.ReadScaledAxis();
-      float heading = atan2(scaled.YAxis, scaled.XAxis);
-      int headingDegrees = (int)(heading * 180/M_PI);
-      headingDegrees = headingDegrees % 360;
-      // Two bytes for the compass, lower byte first
-      Serial.write((char)(headingDegrees % 256));
-      Serial.write((char)(headingDegrees / 256));
-      // Get the accelerometer axes
-      double Xg, Yg, Zg;
-      acc.read(&Xg, &Yg, &Zg);
-      // Low pass filter
-      fXg = Xg * alpha + (fXg * (1.0 - alpha));
-      fYg = Yg * alpha + (fYg * (1.0 - alpha));
-      fZg = Zg * alpha + (fZg * (1.0 - alpha));
-      // One byte per axis
-      Serial.write((char)min((int)(fXg*256), 255));
-      Serial.write((char)min((int)(fYg*256), 255));
-      Serial.write((char)min((int)(fZg*256), 255));
     }
 
     // Terminate the packet

@@ -12,19 +12,20 @@ class powerMonitorController:
 	def __init__(self, ard):
 		self.ard = ard
 		# pin that reads if the regulated 5V is ok
-		self.mon5V = arduino.AnalogInput(ard, 1)
+		self.mon5V = arduino.DigitalInput(ard, 32)
 		# pin that turns on the switched 12V for the lights and MC
-		self.con12V = arduino.AnalogOutput(ard, 3)
+		self.con12V = arduino.DigitalOutput(ard, 36)
 	
 	def checkPowerOK(self):
-		if self.mon5V.getValue>1000:
+		print self.mon5V.getValue()
+		if self.mon5V.getValue():
 			return True
 		else:
 			print "Battery monitor test not passed"
 			return False
 	
 	def powerOnController(self):
-		self.con12V.setValue(1023)
+		self.con12V.setValue(1)
 	
 	def powerOffController(self):
 		self.con12V.setValue(0)
@@ -33,17 +34,21 @@ class powerMonitorController:
 		while True: # should be replaced with some flag that turns off when the robot turns off
 			# if the power is still ok, keep the robot on
 			if self.checkPowerOK():
+				time.sleep(1)
 				self.powerOnController()
+				print "Controller powered on"
 			else:
 				self.powerOffController()
+				print "Controller powered off"
 			# repeat every 1 second
-			time.sleep(1)
+			time.sleep(0.1)
 	
 	# run this to run power monitors and power up the robot
 	def powerOn(self):	
 		# first, check if we can power up the robot the first time
 		while not self.checkPowerOK():
 			time.sleep(0.25)
+
 			
 		# wait a second after power comes online
 		time.sleep(1)
@@ -57,7 +62,7 @@ class powerMonitorController:
 		t.start()
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
 	ard = arduino.Arduino()  # Create the Arduino object
 	monCon = powerMonitorController(ard) # initialize a controller for checking the power
 	

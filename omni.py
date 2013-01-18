@@ -3,8 +3,8 @@ import time
 import math
 
 
-l=0.15
-W=sqrt(0.084914-0.466*l+l*l)
+l=0.159
+W=math.sqrt(0.084914-0.466*l+l*l)
 sina=0.175/W
 
 
@@ -15,7 +15,7 @@ class Omni:
                 self.mA = arduino.Motor(ard, 2, 3, 4)
                 self.mB = arduino.Motor(ard, 5, 6, 7)
                 self.mC = arduino.Motor(ard, 8, 9, 10)
-                ard.run()
+                #ard.run() <-- This is fucking shit up...
 
 		# Forward unlimited at speed "power"
         def forward(self, power):
@@ -53,7 +53,8 @@ class Omni:
 
         # Stop motor method
         def stopMotors(self):
-                self.m0.setSpeed(0)
-                self.m1.setSpeed(0)
+                self.mA.setSpeed(0)
+                self.mB.setSpeed(0)
+                self.mC.setSpeed(0)
                 time.sleep(.1)
 

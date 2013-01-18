@@ -1,4 +1,4 @@
-import arduino, balls, rectangulate, drive2, time, cv, threading
+import arduino, balls, rectangulate, time, cv, threading, omni, math
 
 def pidShit(xpos, xsize, errors):
 	previousError = errors[len(errors) - 1]
@@ -16,7 +16,7 @@ def pidShit(xpos, xsize, errors):
 
 def chaseBalls(timer, counter, listOfErrors, ball_HSV_values):
 	detectWall = False		# TODO: Implement this code (IR sensors, bumpers, etc.)
-	temp=balls.followBall(cam, ball_HSV_values[0], ball_ HSV_values[1])
+	temp=balls.followBall(cam, ball_HSV_values[0], ball_HSV_values[1])
 	if (detectWall):		# later, when I figure out IR
 		pass 			# TODO: Avoid Wall
 	elif len(temp)>2:
@@ -52,9 +52,9 @@ if __name__ == "__main__":
 	begintime = time.time()
 	ard = arduino.Arduino()
 	motors = omni.Omni(ard)
-	monCon = powerMonitorController(ard)
+	time.sleep(1)
 	ard.run()
-	monCon.powerOn() 			# Start the monitor/controller for power
+	
 	counter = 0
 	cam = cv.CaptureFromCAM(1)		# Initialize camera
 	HSV_values = balls.readBallData() 	# Calibration

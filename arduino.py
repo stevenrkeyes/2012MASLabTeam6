@@ -52,9 +52,13 @@ class Arduino(threading.Thread):
         self.readWriteThread.join()
 
     # Create the serial connection to the arduino
+
+
     def connect(self):
         print "Connecting"
-        if self.portOpened: self.close()
+        if self.portOpened:
+		print "port opened" 
+		self.close()
         # Loop through possible values of ACMX, and try to connect on each one
         for i in range(4):
             try:
