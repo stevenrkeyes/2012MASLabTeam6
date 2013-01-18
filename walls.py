@@ -27,7 +27,7 @@ def findYellowWall(img, wallData):
 			blueBottomRight = (blueRectangle[0] + (blueRectangle[3]/2), blueRectangle[1] + (blueRectangle[2]/2))
 			blueBottomLeft = (blueRectangle[0] - (blueRectangle[3]/2), blueRectangle[1] + (blueRectangle[2]/2))
 			averagePoint = ((blueBottomRight[0]+blueBottomLeft[0])/2, (blueBottomRight[1]+blueBottomLeft[1])/2)
-			if (yellowRectangle[3]> averagePoint[1] - yellowRectangle[1]-) > 0): #Threshold might need to be adjusted :)
+			if (yellowRectangle[3] > (averagePoint[1] - yellowRectangle[1]) > 0): #Threshold might need to be adjusted :)
 				foundYellowWall = True
 				yellowWall.append(blueRectangle)
 				yellowWall.append(yellowRectangle)
@@ -35,7 +35,8 @@ def findYellowWall(img, wallData):
 		if foundYellowWall:
 			break
 	output = []
-	if foundYellowWall:=
-		yellow = yellowWall[1]
-		output = [yellow[0], yellow[1]]
+	if foundYellowWall:
+		output = yellowWall[1]
+	output.append(img.width)
+	output.append(img.height)
 	return output
