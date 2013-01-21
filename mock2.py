@@ -70,13 +70,13 @@ if __name__ == "__main__":
 		wallList = findWall(img, wall_values)
 		print list(wallList), "--> walls"
 		ballList = findBall(img, HSV_values)
-		#if (len(wallList) > 0 and hasBalls):
-		#	newSearch = 0
-		#	if oldSearch != newSearch:
-		#		listOfErrors = [0]
-		#	listOfErrors = chaseStuff(wallList, listOfErrors)
-		#	counter = 0
-		#	oldSearch = 0
+		if (len(wallList) > 0 and hasBalls):
+			newSearch = 0
+			if oldSearch != newSearch:
+				listOfErrors = [0]
+			listOfErrors = chaseStuff(wallList, listOfErrors)
+			counter = 0
+			oldSearch = 0
 		if (len(ballList) > 2):
 			newSearch = 1
 			if oldSearch != newSearch:

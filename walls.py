@@ -39,6 +39,7 @@ def findYellowWall(img, wallData):
 		print list(blueRectangle)
 	output = []
 	if foundYellowWall:
-		output += yellowWall
-	output+= [img.width, img.height]
+		bRect = yellowWall[0]
+		yRect = yellowWall[1]
+		output += [(bRect[0] + yRect[0]) / 2 , (bRect[1] + yRect[1]) / 2, bRect[2] + yRect[2], bRect[3] + yRect[3]]
 	return output
