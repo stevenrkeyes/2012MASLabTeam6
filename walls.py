@@ -5,19 +5,20 @@ def readWallsData():
 	for line in yellow:
 		data.append(int(float(line.strip())))
 	yellow.close()
-	data = []
 	blue = open("HSV_WALL_BLUE.data", 'r')
 	for line in blue:
 		data.append(int(float(line.strip())))
 	blue.close()
+	#for d in data: # debug
+	#	print d
 	output=[(data[0], data[1], data[2]), (data[3], data[4], data[5]), (data[6], data[7], data[8]), (data[9], data[10], data[11])]
 	return output
 
 def findYellowWall(img, wallData):
-	blueMin = wallData(2)
-	blueMax = wallData(3)
-	yellowMin = wallData(0)
-	yellowMax = wallData(1)
+	blueMin = wallData[2]
+	blueMax = wallData[3]
+	yellowMin = wallData[0]
+	yellowMax = wallData[1]
 	blueRectangles = rectangulate.findObjects(img, blueMin,blueMax)
 	yellowRectangles = rectangulate.findObjects(img, yellowMin, yellowMax)
 	yellowWall = []
@@ -31,12 +32,13 @@ def findYellowWall(img, wallData):
 				foundYellowWall = True
 				yellowWall.append(blueRectangle)
 				yellowWall.append(yellowRectangle)
+				print "HELLO YELLOW"
 				break
 		if foundYellowWall:
 			break
+		print list(blueRectangle)
 	output = []
 	if foundYellowWall:
-		output = yellowWall[1]
-	output.append(img.width)
-	output.append(img.height)
+		output += yellowWall
+	output+= [img.width, img.height]
 	return output

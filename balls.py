@@ -9,7 +9,7 @@ def readBallData():
 	return output
 def followBall(cam, lowerHSV, upperHSV):
 	# Capture camera frame and find balls
-	feed = cv.QueryFrame(cam)
+	feed = cam
 	balls = rectangulate.findObjects(feed, lowerHSV, upperHSV)
 	line25Percent = feed.width/4
 	midlineHorizontal = feed.width/2

@@ -39,8 +39,8 @@ def findObjects(img=cv.LoadImageM("foo.jpg"), lowerHSV=cv.Scalar(116,155,79), up
 	# print sorted(list(important_contours))
 	# print sorted(list(important_contours[0]))
 	# testimg = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_8U, 3)
-	cv.DrawContours(img, important_contours[0], cv.Scalar(180,255,255), cv.Scalar(100,200,200), 1, 5)
-	cv.SaveImage("contours.png", img)
+	#cv.DrawContours(img, important_contours[0], cv.Scalar(180,255,255), cv.Scalar(100,200,200), 1, 5)
+	#cv.SaveImage("contours.png", img)
 	# Inscribing contour in rectangle, 
 	rectangles = []	
 	for important_contour in important_contours:

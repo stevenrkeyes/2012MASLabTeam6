@@ -1,7 +1,7 @@
 import cv, time
 
 if __name__ == "__main__":
-	cam = cv.CaptureFromCAM(0)
+	cam = cv.CaptureFromCAM(1)
 	objects = ["ball", "yellow wall", "blue wall"] 
 	filenames = ["HSV_BALL.data", "HSV_WALL_YELLOW.data", "HSV_WALL_BLUE.data"]
 	i = 0
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 						MinV = point[2]
 					else:
 						pass
-				f = open(filepmnames[i], 'w')
+				f = open(filenames[i], 'w')
 				f.write(str(MinH)+"\n")
 				f.write(str(MinS)+"\n")
 				f.write(str(MinV)+"\n")
@@ -63,4 +63,4 @@ if __name__ == "__main__":
 				print "Done!"
 				break
 		i+=1
-	print "Calibration Complete :)"
+	print "Calibration Complete ;)"
