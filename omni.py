@@ -89,7 +89,7 @@ class Omni:
                 self.stopMotors()
 
 	# Add power to all motors (turning) for a certain time
-	def addTurn(self, power, time):
+	def turn(self, power):
 		self.mA.setSpeed(mASpeed + int(power * 0.7511))
 		self.mB.setSpeed(mBSpeed - int(power * 0.7511))
 		self.mC.setSpeed(mCSpeed - power)

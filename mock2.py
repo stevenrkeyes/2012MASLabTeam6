@@ -1,6 +1,7 @@
 import arduino, balls, rectangulate, time, cv, threading, omni, math, walls
 
-
+def analyzeWall(irdata):
+	return 0 #TODO: Impliment IR code
 def pidShit(xpos, xsize, errors):
 	previousError = errors[len(errors) - 1]
 	currentError = xsize/2 - xpos
@@ -55,6 +56,8 @@ if __name__ == "__main__":
 	roller = arduino.Motor(ard,11,12,13)
 	ard.run()
 	roller.setSpeed(80)
+	backBumper = [False , False]
+	FrontIR = [0, 0]
 	hasBalls = False
 	counter = 0
 	cam = cv.CaptureFromCAM(1)		# Initialize camera
@@ -70,9 +73,14 @@ if __name__ == "__main__":
 		wallList = findWall(img, wall_values)
 		print list(wallList), "--> walls"
 		ballList = findBall(img, HSV_values)
-		if (len(wallList) > 0 and hasBalls):
+		#FrontIR = getIRData() TODO:Impliment IR sensor
+		avoidWall = analyzeWall(FrontIR)
+		if (analyzeWall != 0)
+			omni.turn(avoidWall)
+		elif (len(wallList) > 0 and hasBalls):
 			newSearch = 0
 			if oldSearch != newSearch:
+				motors.stopMotors()
 				listOfErrors = [0]
 			listOfErrors = chaseStuff(wallList, listOfErrors)
 			counter = 0
@@ -80,6 +88,7 @@ if __name__ == "__main__":
 		if (len(ballList) > 2):
 			newSearch = 1
 			if oldSearch != newSearch:
+				motors.stopMotors()
 				listOfErrors = [0]
 			listOfErrors = chaseStuff(ballList, listOfErrors)
 			counter = 0

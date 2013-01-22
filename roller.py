@@ -20,3 +20,4 @@ if __name__ == "__main__":
     r.startRoller()
     time.sleep(5)
     r.stopRoller()
+    arduino.stop()
