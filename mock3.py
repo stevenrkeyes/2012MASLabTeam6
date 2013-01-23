@@ -1,7 +1,8 @@
-import arduino, balls, rectangulate, time, cv, threading, omni, math, walls
+import arduino, cv, time, math, threading
+import rectangulate, timer, roller
+import omni, walls, light, balls
 
-def analyzeWall(irdata):
-	return 0 #TODO: Impliment IR code
+
 def pidShit(xpos, xsize, errors):
 	previousError = errors[len(errors) - 1]
 	currentError = xsize/2 - xpos
@@ -49,18 +50,17 @@ def chaseStuff(temp, listOfErrors):
 	return listOfErrors
 
 if __name__ == "__main__":
-	counterBallNotSeen = 0
-	begintime = time.time()
+	#Create class instances
 	ard = arduino.Arduino()
+	timer = timer.Timer()
 	motors = omni.Omni(ard)
-	roller = arduino.Motor(ard,11,12,13)
+	light=light.masterLight(ard)
 	ard.run()
-	roller.setSpeed(80)
-	backBumper = [False , False]
-	FrontIR = [0, 0]
+	light.powerOn()
+	
 	hasBalls = False
-	counter = 0
-	cam = cv.CaptureFromCAM(1)		# Initialize camera
+	counter = 0 
+	cam = cv.CaptureFromCAM(0)		# Initialize camera
 	wall_values = walls.readWallsData()
 	HSV_values = balls.readBallData() 	# Calibration
 	listOfErrors = [0]
@@ -68,19 +68,14 @@ if __name__ == "__main__":
 	newSearch = 1			# when chasing a different ball or chasing a wall
 	motors.forward(-40)
 	time.sleep(0.1)
-	while time.time() < (begintime + 180):
+	while not timer.timerOver():
 		img = cv.QueryFrame(cam)
 		wallList = findWall(img, wall_values)
 		print list(wallList), "--> walls"
 		ballList = findBall(img, HSV_values)
-		#FrontIR = getIRData() TODO:Impliment IR sensor
-		avoidWall = analyzeWall(FrontIR)
-		if (analyzeWall != 0)
-			omni.turn(avoidWall)
-		elif (len(wallList) > 0 and hasBalls):
+		if (len(wallList) > 0 and hasBalls):
 			newSearch = 0
 			if oldSearch != newSearch:
-				motors.stopMotors()
 				listOfErrors = [0]
 			listOfErrors = chaseStuff(wallList, listOfErrors)
 			counter = 0
@@ -88,7 +83,6 @@ if __name__ == "__main__":
 		if (len(ballList) > 2):
 			newSearch = 1
 			if oldSearch != newSearch:
-				motors.stopMotors()
 				listOfErrors = [0]
 			listOfErrors = chaseStuff(ballList, listOfErrors)
 			counter = 0
@@ -99,14 +93,12 @@ if __name__ == "__main__":
 			print "Nope"
 			counter+= 1
 			if (counter >= 6):
-				motors.turnRight(80, 100)
+				motors.turnRight(80, 60)
 				time.sleep(0.1)
 				print "searching..."
 				counter = 0
 				listOfErrors = [0]
 				oldSearch = 2	
 				newSearch = 2
-	roller.setSpeed(0)
 	motors.stopMotors()
 	ard.stop()
-

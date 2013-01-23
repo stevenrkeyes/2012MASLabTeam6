@@ -6,7 +6,7 @@ import arduino, time, threading
 class switch(arduino.DigitalInput):
 
     # amount of time to ignore a switch after it is first pressed
-    cooldownTime = 0.500 # seconds
+    cooldownTime = 0.050 # seconds
     
     def __init__(self, ard, pin):
         
@@ -20,8 +20,8 @@ class switch(arduino.DigitalInput):
         # set the switch to cooldown, indicating it has been pressed recently
         # and should not be read for a brief amount of time
         self.cooldown = True
-        t = threading.Thread(target=self.reactivateSwitch, args=[self.cooldownTime])
-        t.start()
+        t = threading.Thread(target=self.reactivateSwitch, args=[cooldownTime])
+        t.run()
 
     # reactiveate the switch after a cooldown delay
     def reactivateSwitch(self, delay):
@@ -29,6 +29,7 @@ class switch(arduino.DigitalInput):
         self.cooldown = False
         
         
+
 # This is a class for a tool that checks the array of limit switches
 # at the ball intake to detect if balls have been collected
 class ballDetector:
@@ -55,7 +56,7 @@ class ballDetector:
         # neighboring 1 switch on either side should also be ignored
         # (see below)
 
-        for n in range(len(self.switches)):
+        for n in len(self.switches):
             # if the switch is cooling down, ignore it
             if self.switches[n].cooldown:
                 switchReadings.append(False)
@@ -90,11 +91,11 @@ class ballDetector:
             with self.ballCountLock:
                 self.ballCount += numBallsDetected
             
-            time.sleep(self.refreshTime)
+            time.sleep(refreshTime)
 
     def run(self):
         t = threading.Thread(target=self.detectionLoop)
-        t.start()
+        t.run()
 
 if __name__ == "__main__":
     import roller
@@ -103,12 +104,10 @@ if __name__ == "__main__":
     r = roller.Roller(ard)
 
     ard.run()
-    time.sleep(2) #wait for the ard to initialize
-    bD.run()
-    print "bd running"
 
     start = time.time()
     while time.time()-start < 10:
         print bD.readSwitches()
-        print bD.getBallCount(), bD.hasBalls()
-        time.sleep(0.05)
+        time.sleep(0.025)
+
+    #bD.run()
