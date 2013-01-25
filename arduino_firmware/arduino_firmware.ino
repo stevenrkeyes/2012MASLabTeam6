@@ -527,7 +527,7 @@ void moveServos()
   for (int i = 0; i < numServos; i++)
   {
     // Set the servo angle for the ith motor
-    int in = (int) serialRead();
+    unsigned int in = (unsigned int) (serialRead())%256;
     servos[i]->write(in);
   }
 }
