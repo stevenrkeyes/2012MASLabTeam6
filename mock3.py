@@ -2,6 +2,10 @@ import arduino, cv, time, math, threading
 import rectangulate, timer, roller, bumper, ballDetector
 import omni, walls, light, balls, servo, ir
 
+timerOver = False
+ard = 0
+motors = 0
+roller = 0
 def pidShit(xpos, xsize, errors):
 	previousError = errors[len(errors) - 1]
 	currentError = xsize/2 - xpos
@@ -24,13 +28,13 @@ def findBall(feed, ball_HSV_values):
 	temp = balls.followBall(feed, ball_HSV_values[0], ball_HSV_values[1])
 	return temp
 
-def lineUp(timer, motors, backBumper, gate):
+def lineUp(backBumper, gate):
 	motors.backward(80)
 	time.sleep(0.2)
 	motors.turnRight(80, 180)
 	atWall = False
 	#motors.backwardsUnlimited() <--How go backwards???? ;)
-	while timer.timerOver() and not atWall:
+	while not atWall:
 		if bumper.leftBumped() and not bumper.rightBumped():
 			omni.stopA()
 		elif not bumper.leftBumped() and bumper.rightBumped():
@@ -43,6 +47,13 @@ def lineUp(timer, motors, backBumper, gate):
 	time.sleep(2.5)
 	gate.closeGate()
 
+def halt():
+	_lock = threading.Lock()
+	_lock.acquire()
+	motors.stopMotors()
+	roller.stopRoller()
+	ard.stop()
+	_lock.release()
 def chaseStuff(temp, listOfErrors):
 	camwidth=temp[4]
 	camheight=temp[5]
@@ -69,8 +80,9 @@ def chaseStuff(temp, listOfErrors):
 
 if __name__ == "__main__":
 	#Create class instances
+	timer = threading.Timer(180.0, halt)
+	timer.start()
 	ard = arduino.Arduino()
-	timer = timer.Timer()
 	motors = omni.Omni(ard)
 	light=light.masterLight(ard)
 	onSwitch = ballDetector.switch(ard, 11)
@@ -88,7 +100,6 @@ if __name__ == "__main__":
 	cam = cv.CaptureFromCAM(1)		# Initialize camera
 	wall_values = walls.readWallsData()
 	HSV_values = balls.readBallData() 	# Calibration
-
 	listOfErrors = [0]
 	oldSearch = 0			# Variables to reset listOfErrors
 	newSearch = 1			# when chasing a different ball or chasing a wall
@@ -97,7 +108,7 @@ if __name__ == "__main__":
 	time.sleep(0.1)
 	isYellowWall = False
 	counterTurn = 0
-	while not timer.timerOver():
+	while not timerOver:
 		img = cv.QueryFrame(cam)
 		wallList = findWall(img, wall_values)
 		print list(wallList), "--> walls"
@@ -105,7 +116,7 @@ if __name__ == "__main__":
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
 			if (isYellowWall):				
-				lineUp(timer, motors, irSensors, gate)
+				lineUp(irSensors, gate)
 			else:
 				print "turning away from wall LOL"
 				motors.turnLeft(irSensors.getTurn()*80, 30) #Just Position based correction
@@ -149,6 +160,3 @@ if __name__ == "__main__":
 				time.sleep(1)
 				counterTurn = 0
 				motors.stopMotors()
-	motors.stopMotors()
-	roller.stopRoller()
-	ard.stop()
