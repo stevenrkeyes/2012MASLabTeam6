@@ -8,7 +8,7 @@ if __name__ == "__main__":
 	ard = arduino.Arduino()
 	omni=omni.Omni(ard)
 	ard.run()
-	omni.forwardArc(-80,-20)
+	omni.turnLeft(80, 90)
 
 	time.sleep(5)
 	omni.stopMotors()

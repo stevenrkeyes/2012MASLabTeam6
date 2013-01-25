@@ -7,7 +7,7 @@ class Roller:
         self.mRoller = arduino.Motor(ard, 11, 12, 13)
 
     def startRoller(self):
-        self.mRoller.setSpeed(120)
+        self.mRoller.setSpeed(int(-120))
 
     def stopRoller(self):
         self.mRoller.setSpeed(0)

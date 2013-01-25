@@ -14,22 +14,22 @@ class Omni:
         #  Solution: initialize motors outside of class, use as parameters..?
 	def __init__(self, ard):
 		global mASpeed, mBSpeed, mCSpeed
-		self.mA = arduino.Motor(ard, 2, 3, 4)
+		self.mC = arduino.Motor(ard, 2, 3, 4)
 		self.mB = arduino.Motor(ard, 5, 6, 7)
-		self.mC = arduino.Motor(ard, 8, 9, 10)
+		self.mA = arduino.Motor(ard, 8, 9, 10)
 		#ard.run() <-- This is fucking shit up...
 
 		# Forward unlimited at speed "power"
 	def forward(self, power):
 		mASpeed = mBSpeed = power
 		mCSpeed = 0
-		self.mA.setSpeed(power)
+		self.mA.setSpeed(-power)
 		self.mB.setSpeed(power)
 		self.mC.setSpeed(0)
 
 	def forwardArc(self, power, radius):
 		if radius < 0:
-			mASpeed = int((-power*radius)/(radius+35))
+			mASpeed = int((power*radius)/(radius+35))
 			mBSpeed = power
 			mCSpeed = 16
 			self.mA.setSpeed(mASpeed)
@@ -63,12 +63,12 @@ class Omni:
 
 	# Drive right at speed "power"
 	def right(self, power): 
-		mASpeed = int(l/(2*W*sina))
-		mBSpeed = int(-l/(2*W*sina))
+		mASpeed = int((l/(2*W*sina))*power)
+		mBSpeed = int((-l/(2*W*sina))*power)
 		mCSpeed = power
-		self.mA.setSpeed(int(l/(2*W*sina)))
-		self.mB.setSpeed(int(-l/(2*W*sina)))
-		self.mC.setSpeed(power)
+		self.mA.setSpeed(-mASpeed)
+		self.mB.setSpeed(-mBSpeed)
+		self.mC.setSpeed(-mCSpeed)
 			
 	# Drive left at speed "power"
 	def left(self, power):
@@ -76,16 +76,16 @@ class Omni:
 			
 	# Turn left method with "power" and angle "a".
 	def turnLeft(self, power, a):
-		self.mA.setSpeed(int(-power*0.7511))
-		self.mB.setSpeed(int(power*0.7511))
+		self.mA.setSpeed(-int(power*0.7511))
+		self.mB.setSpeed(-int(power*0.7511))
 		self.mC.setSpeed(int(power))
-		time.sleep(a/100)
+		time.sleep(a*0.016)
 		self.stopMotors()
-		mASpeed, mBSpeed, mCSpeed = 0,0,0
 			
 	# Turn right method with "power" and angle "a".
 	## Experimentally tune
 	def turnRight(self, power, a):
+		print "Right turn initiated"
 		self.turnLeft(-power, a)
 		self.stopMotors()
 
@@ -104,4 +104,17 @@ class Omni:
 		self.mB.setSpeed(0)
 		self.mC.setSpeed(0)
 		time.sleep(.1)
+
+	def stopA(self):
+		self.mA.setSpeed(0)
+		time.sleep(.1)
+
+	def stopB(self):
+		self.mB.setSpeed(0)
+		time.sleep(.1)
+
+	def stopC(self):
+		self.mC.setSpeed(0)
+		time.sleep(.1)
+
 
