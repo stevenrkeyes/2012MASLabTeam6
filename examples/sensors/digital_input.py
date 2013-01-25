@@ -13,4 +13,4 @@ ard.run()  # Start the thread which communicates with the Arduino
 # Main loop -- check the sensor and update the digital output
 while True:
     print d2.getValue()
-    time.sleep(0.3)
+    time.sleep(0.1)
