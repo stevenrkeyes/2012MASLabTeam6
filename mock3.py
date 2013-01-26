@@ -6,6 +6,8 @@ timerOver = False
 ard = 0
 motors = 0
 roller = 0
+wallList = []
+ballList = []
 def pidShit(xpos, xsize, errors):
 	previousError = errors[len(errors) - 1]
 	currentError = xsize/2 - xpos
@@ -22,7 +24,7 @@ def pidShit(xpos, xsize, errors):
 
 def findWall(feed, wall_HSV_values):
 	temp = walls.findYellowWall(feed, wall_HSV_values)
-	return temp	
+	return temp
 
 def findBall(feed, ball_HSV_values):
 	temp = balls.followBall(feed, ball_HSV_values[0], ball_HSV_values[1])
@@ -46,7 +48,11 @@ def lineUp(backBumper, gate):
 	gate.openGate()
 	time.sleep(2.5)
 	gate.closeGate()
-
+def cameraShit(cam):
+	#TODO: Thread this shit
+	img = cv.QueryFrame(cam)
+	wallList = findWall(img, wall_values)
+	ballList = findBall(img, HSV_values)
 def halt():
 	_lock = threading.Lock()
 	_lock.acquire()
@@ -80,8 +86,6 @@ def chaseStuff(temp, listOfErrors):
 
 if __name__ == "__main__":
 	#Create class instances
-	timer = threading.Timer(180.0, halt)
-	timer.start()
 	ard = arduino.Arduino()
 	motors = omni.Omni(ard)
 	light=light.masterLight(ard)
@@ -91,10 +95,12 @@ if __name__ == "__main__":
 	bumper=bumper.Bumper(ard)
 	roller = roller.Roller(ard)
 	ard.run()
-	roller.startRoller()
 	light.powerOn()
 	while onSwitch.getValue() != True:
 		time.sleep(0.1)
+	timer = threading.Timer(180.0, halt)
+	timer.start()
+	roller.startRoller()
 	hasBalls = False
 	counter = 0 
 	cam = cv.CaptureFromCAM(1)		# Initialize camera
@@ -108,11 +114,9 @@ if __name__ == "__main__":
 	time.sleep(0.1)
 	isYellowWall = False
 	counterTurn = 0
+	getCam = threading.Thread(target = cameraShit, args = [cam])
+	getCam.start()
 	while not timerOver:
-		img = cv.QueryFrame(cam)
-		wallList = findWall(img, wall_values)
-		print list(wallList), "--> walls"
-		ballList = findBall(img, HSV_values)
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
 			if (isYellowWall):				
