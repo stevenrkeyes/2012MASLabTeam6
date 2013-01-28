@@ -56,7 +56,7 @@ class BallDetector:
         # neighboring 1 switch on either side should also be ignored
         # (see below)
 
-        for n in len(self.switches):
+        for n in range(len(self.switches)):
             # if the switch is cooling down, ignore it
             if self.switches[n].cooldown:
                 switchReadings.append(False)
@@ -91,7 +91,7 @@ class BallDetector:
             with self.ballCountLock:
                 self.ballCount += numBallsDetected
             
-            time.sleep(refreshTime)
+            time.sleep(self.refreshTime)
 
     def start(self):
         t = threading.Thread(target=self.detectionLoop)

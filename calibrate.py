@@ -55,10 +55,10 @@ if __name__ == "__main__":
 				f = open(filenames[i], 'w')
 				f.write(str(MinH)+"\n")
 				f.write(str(MinS)+"\n")
-				f.write(50.0+"\n") #V wider threshold
+				f.write("50.0\n") #V wider threshold
 				f.write(str(MaxH)+"\n")
 				f.write(str(MaxS)+"\n")
-				f.write(200.0+"\n") #V wider threshold
+				f.write("200.0\n") #V wider threshold
 				f.close()
 				print "Done!"
 				break

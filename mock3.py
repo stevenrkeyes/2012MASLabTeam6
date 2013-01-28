@@ -130,10 +130,14 @@ if __name__ == "__main__":
 	isYellowWall = False
 	counterTurn = 0
 	
-	getCam = threading.Thread(target = cameraShit, args = [cam])
-	getCam.start()
+	#getCam = threading.Thread(target = cameraShit, args = [cam])
+	#getCam.start()
 	
 	while not timerOver:
+		img = cv.QueryFrame(cam)
+        	wallList = findWall(img, wall_values)
+                ballList = findBall(img, HSV_values)
+                time.sleep(0)
 		hasBalls = ballDetect.getBallCount() > 1
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
@@ -160,7 +164,6 @@ if __name__ == "__main__":
 				isYellowWall = False
 			listOfErrors = chaseStuff(ballList, listOfErrors)
 			counter = 0
-			hasBalls = True #impliment touch sensor later
 			oldSearch = 1
 		else:
 			motors.stopMotors()
@@ -178,7 +181,7 @@ if __name__ == "__main__":
 				counterTurn += 1
 			if counterTurn > 5:
 				motors.forward(-80)
-				dirTurn = -dirTurn
+				dirTurn *= -1
 				time.sleep(1)
 				counterTurn = 0
 				motors.stopMotors()
