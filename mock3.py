@@ -2,23 +2,25 @@ import arduino, cv, time, math, threading
 import rectangulate, timer, roller, bumper, ballDetector
 import omni, walls, light, balls, servo, ir
 
+# note: not necessary to initialize these in python
 timerOver = False
 ard = 0
 motors = 0
 roller = 0
 wallList = []
 ballList = []
+
+# calculate the PID correction from the camera based on the
+# x position of a ball and the width (xsize) of the camera
 def pidShit(xpos, xsize, errors):
-	previousError = errors[len(errors) - 1]
+	previousError = errors[-1]
 	currentError = xsize/2 - xpos
 	derivative = previousError - currentError
-	integral = 0
-	for error in errors:
-		integral += error
+	integral = sum(errors)
 	Kp = 3.0/40 # Set
 	Ki = (3.0/140) * 1.5 # These
 	Kd = (3.0/140) / 5 # Values
-	PID = int((Kp * currentError) + (Kd * derivative) + (Ki * integral))
+	PID = int(round((Kp * currentError) + (Kd * derivative) + (Ki * integral)))
 	print PID, "PID"	
 	return PID
 
@@ -59,6 +61,7 @@ def halt():
 	motors.stopMotors()
 	roller.stopRoller()
 	ard.stop()
+	# note: ard.killReceived becomes True when the arduino is stopped
 	_lock.release()
 def chaseStuff(temp, listOfErrors):
 	camwidth=temp[4]
@@ -85,7 +88,7 @@ def chaseStuff(temp, listOfErrors):
 	return listOfErrors
 
 if __name__ == "__main__":
-	#Create class instances
+	# Create class instances
 	ard = arduino.Arduino()
 	motors = omni.Omni(ard)
 	light=light.masterLight(ard)
@@ -94,28 +97,39 @@ if __name__ == "__main__":
 	irSensors = ir.wallDetector(ard)
 	bumper=bumper.Bumper(ard)
 	roller = roller.Roller(ard)
+
+	# Run the arduino, power up systems
 	ard.run()
 	light.powerOn()
+	# wait until the start button is pressed
 	while onSwitch.getValue() != True:
 		time.sleep(0.1)
+
+	# create and start a timer for the match
 	timer = threading.Timer(180.0, halt)
 	timer.start()
+
 	roller.startRoller()
+	
 	hasBalls = False
-	counter = 0 
+	counter = 0
+	
 	cam = cv.CaptureFromCAM(1)		# Initialize camera
 	wall_values = walls.readWallsData()
 	HSV_values = balls.readBallData() 	# Calibration
 	listOfErrors = [0]
 	oldSearch = 0			# Variables to reset listOfErrors
 	newSearch = 1			# when chasing a different ball or chasing a wall
+
 	motors.forward(-40)
 	dirTurn = 1
 	time.sleep(0.1)
 	isYellowWall = False
 	counterTurn = 0
+	
 	getCam = threading.Thread(target = cameraShit, args = [cam])
 	getCam.start()
+	
 	while not timerOver:
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
