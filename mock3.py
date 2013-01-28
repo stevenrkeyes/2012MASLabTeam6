@@ -51,10 +51,11 @@ def lineUp(backBumper, gate):
 	time.sleep(2.5)
 	gate.closeGate()
 def cameraShit(cam):
-	#TODO: Thread this shit
-	img = cv.QueryFrame(cam)
-	wallList = findWall(img, wall_values)
-	ballList = findBall(img, HSV_values)
+        while True:
+                img = cv.QueryFrame(cam)
+        	wallList = findWall(img, wall_values)
+                ballList = findBall(img, HSV_values)
+                time.sleep(0.01)
 def halt():
 	_lock = threading.Lock()
 	_lock.acquire()
