@@ -32,7 +32,7 @@ class switch(arduino.DigitalInput):
 
 # This is a class for a tool that checks the array of limit switches
 # at the ball intake to detect if balls have been collected
-class ballDetector:
+class BallDetector:
 
     # time between checking the sensors
     refreshTime = 0.010 # seconds
@@ -93,14 +93,14 @@ class ballDetector:
             
             time.sleep(refreshTime)
 
-    def run(self):
+    def start(self):
         t = threading.Thread(target=self.detectionLoop)
-        t.run()
+        t.start()
 
 if __name__ == "__main__":
     import roller
     ard = arduino.Arduino()
-    bD = ballDetector(ard)
+    bD = BallDetector(ard)
     r = roller.Roller(ard)
 
     ard.run()

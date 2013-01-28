@@ -9,8 +9,13 @@ if __name__ == "__main__":
 	omni=omni.Omni(ard)
 	ard.run()
 	omni.turnLeft(80, 90)
-
-	time.sleep(5)
+	time.sleep(2)
+	omni.turnRight(80, 90)
+	time.sleep(2)
+	omni.forward(80)
+	time.sleep(2)
+	omni.forward(-80)
+	time.sleep(2)
 	omni.stopMotors()
 	print "lol"
 	ard.stop()

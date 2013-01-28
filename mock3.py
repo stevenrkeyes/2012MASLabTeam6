@@ -6,7 +6,7 @@ import omni, walls, light, balls, servo, ir
 timerOver = False
 ard = 0
 motors = 0
-roller = 0
+_roller = 0
 wallList = []
 ballList = []
 
@@ -51,16 +51,16 @@ def lineUp(backBumper, gate):
 	time.sleep(2.5)
 	gate.closeGate()
 def cameraShit(cam):
-        while True:
+        while not timerOver:
                 img = cv.QueryFrame(cam)
         	wallList = findWall(img, wall_values)
                 ballList = findBall(img, HSV_values)
-                time.sleep(0.01)
+                time.sleep(0)
 def halt():
 	_lock = threading.Lock()
 	_lock.acquire()
 	motors.stopMotors()
-	roller.stopRoller()
+	_roller.stopRoller()
 	ard.stop()
 	# note: ard.killReceived becomes True when the arduino is stopped
 	_lock.release()
@@ -97,7 +97,9 @@ if __name__ == "__main__":
 	gate = servo.Servo(ard)
 	irSensors = ir.wallDetector(ard)
 	bumper=bumper.Bumper(ard)
-	roller = roller.Roller(ard)
+	ballDetect = ballDetector.BallDetector(ard)
+	
+	_roller = roller.Roller(ard)
 
 	# Run the arduino, power up systems
 	ard.run()
@@ -109,8 +111,8 @@ if __name__ == "__main__":
 	# create and start a timer for the match
 	timer = threading.Timer(180.0, halt)
 	timer.start()
-
-	roller.startRoller()
+	ballDetect.start()
+	_roller.startRoller()
 	
 	hasBalls = False
 	counter = 0
@@ -132,6 +134,7 @@ if __name__ == "__main__":
 	getCam.start()
 	
 	while not timerOver:
+		hasBalls = ballDetect.getBallCount() > 1
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
 			if (isYellowWall):				

@@ -32,8 +32,8 @@ def findYellowWall(img, wallData):
 				foundYellowWall = True
 				yellowWall.append(blueRectangle)
 				yellowWall.append(yellowRectangle)
-				cv.Rectangle(img, (blueRectangle[0] - blueRectangle[2], blueRectangle[1]-blueRectangle[3]), (blueRectangle[0] + blueRectangle[2], blueRectangle[1]+blueRectangle[3]), (200,200,200), 4)
-				cv.Rectangle(img, (yellowRectangle[0] - yellowRectangle[2], yellowRectangle[1]-yellowRectangle[3]), (yellowRectangle[0] + yellowRectangle[2], yellowRectangle[1]+yellowRectangle[3]), (200,200,200), 4)
+				#cv.Rectangle(img, (blueRectangle[0] - blueRectangle[2], blueRectangle[1]-blueRectangle[3]), (blueRectangle[0] + blueRectangle[2], blueRectangle[1]+blueRectangle[3]), (200,200,200), 4)
+				#cv.Rectangle(img, (yellowRectangle[0] - yellowRectangle[2], yellowRectangle[1]-yellowRectangle[3]), (yellowRectangle[0] + yellowRectangle[2], yellowRectangle[1]+yellowRectangle[3]), (200,200,200), 4)
 				print "HELLO YELLOW"
 				break
 		if foundYellowWall:
@@ -44,5 +44,5 @@ def findYellowWall(img, wallData):
 		bRect = yellowWall[0]
 		yRect = yellowWall[1]
 		output += [(bRect[0] + yRect[0]) / 2 , (bRect[1] + yRect[1]) / 2, bRect[2] + yRect[2], bRect[3] + yRect[3]]
-	cv.SaveImage("walls.png", img)
+	#cv.SaveImage("walls.png", img)
 	return output
