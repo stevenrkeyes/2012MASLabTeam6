@@ -6,7 +6,7 @@ import arduino, time, threading
 class switch(arduino.DigitalInput):
 
     # amount of time to ignore a switch after it is first pressed
-    cooldownTime = 0.050 # seconds
+    cooldownTime = 1.0 # seconds
     
     def __init__(self, ard, pin):
         
@@ -21,7 +21,7 @@ class switch(arduino.DigitalInput):
         # and should not be read for a brief amount of time
         self.cooldown = True
         t = threading.Thread(target=self.reactivateSwitch, args=[self.cooldownTime])
-        t.run()
+        t.start()
 
     # reactiveate the switch after a cooldown delay
     def reactivateSwitch(self, delay):
@@ -35,7 +35,7 @@ class switch(arduino.DigitalInput):
 class BallDetector:
 
     # time between checking the sensors
-    refreshTime = 0.010 # seconds
+    refreshTime = 0.050 # seconds
         
     def __init__(self, ard):
         self.ard = ard
@@ -104,10 +104,16 @@ if __name__ == "__main__":
     r = roller.Roller(ard)
 
     ard.run()
-
+    time.sleep(0.5) # wait for the pins to stabilize
+    
+    r.startRoller()
+    bD.start()
+    
     start = time.time()
-    while time.time()-start < 10:
-        print bD.readSwitches()
-        time.sleep(0.025)
+    while time.time()-start < 20:
+        print bD.getBallCount()#, bD.readSwitches()
+        time.sleep(0.25)
+    
+    r.stopRoller()
 
     #bD.run()
