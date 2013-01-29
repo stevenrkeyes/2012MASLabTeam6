@@ -140,7 +140,7 @@ if __name__ == "__main__":
 	hasBalls = False
 	counter = 0
 	
-	cam = cv.CaptureFromCAM(0)		# Initialize camera
+	cam = cv.CaptureFromCAM(1)		# Initialize camera
 	wall_values = walls.readWallsData()
 	HSV_values = balls.readBallData(isGreen) 	# Calibration
 	listOfErrors = [0]
@@ -198,7 +198,7 @@ if __name__ == "__main__":
 			motors.stopMotors()
 			print "Nope"
 			counter+= 1
-			if (counter >= 6):
+			if (counter >= 3):
 				if counterTurn < 5:
 					motors.forward(-80)
 				time.sleep(2)
@@ -209,6 +209,6 @@ if __name__ == "__main__":
 				newSearch = 2
 				counterTurn += 1
 			if counterTurn > 3:
-				motors.turn(dirTurn*80, 90)
+				motors.turnRight(dirTurn*80, 90)
 				dirTurn *= -1
 				counterTurn = 0
