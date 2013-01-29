@@ -35,30 +35,31 @@ def findBall(feed, ball_HSV_values):
 def lineUp(backBumper, gate, motors):
 	# back away from the wall a little
 	motors.backward(-80)
-	time.sleep(0.2)
+	time.sleep(0.5)
 	
 	# rotate around to face the wall
 	motors.turnRight(80, 180)
 	
 	# drive to the wall, throttling the appropriate motor until aligned
 	atWall = False
-	motors.forward(80)
+	motors.forward(40)
 	while not atWall:
 		if backBumper.leftBumped() and not backBumper.rightBumped():
-			motors.left(80)		
+			motors.right(40)		
 		elif not backBumper.leftBumped() and backBumper.rightBumped():
-			motors.right(80)
+			motors.left(40)
 		elif backBumper.leftBumped() and backBumper.rightBumped():
 			# you're lined up!
 			atWall = True
 		else:
-			motors.forward(80)
+			motors.forward(40)
 
 	# go in a bit
-	motors.forward(70)
-
+	motors.backward(60)
+	time.sleep(0.5)
 	gate.openGate()
-	time.sleep(0.25)
+	motors.forward(80)
+	time.sleep(1)
 	motors.stopMotors()
 	time.sleep(2.5)
 	gate.closeGate()
