@@ -1,7 +1,11 @@
 import cv, rectangulate
-def readBallData():
+def readBallData(isGreen):
 	data = []
-	f = open("HSV_BALL.data", 'r')
+	f = 0
+	if isGreen:
+		f = open("HSV_GREEN_BALL.data", 'r')
+	else:
+		f = open("HSV_RED_BALL.data", 'r')
 	for line in f:
 		data.append(int(float(line.strip())))
 	f.close()

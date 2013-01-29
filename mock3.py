@@ -106,7 +106,7 @@ if __name__ == "__main__":
 	ard = arduino.Arduino()
 	motors = omni.Omni(ard)
 	light=light.masterLight(ard)
-	onSwitch = ballDetector.switch(ard, 11)
+	onSwitch = arduino.DigitalInput(ard, 11)
 	gate = servo.Servo(ard)
 	irSensors = ir.wallDetector(ard)
 	backBumper=bumper.Bumper(ard)
@@ -118,11 +118,17 @@ if __name__ == "__main__":
 	ard.run()
 	light.powerOn()
 	# wait until the start button is pressed
-	loopVar = False
-	while not loopVar:
-		if onSwitch.getValue() != True
-			time.sleep(0.05)
-			loopVar = onSwitch.getValue()
+	isGreen = False
+	isBumped = False
+	while not isBumped:
+		if backBumper.leftBumped():
+			isBumped = True
+			print "RED"
+			isGreen = False
+		elif backBumper.rightBumped():
+			isBumped = True
+			print "GREEN"
+			isGreen = True
 		time.sleep(0.05)
 
 	# create and start a timer for the match
@@ -136,7 +142,7 @@ if __name__ == "__main__":
 	
 	cam = cv.CaptureFromCAM(0)		# Initialize camera
 	wall_values = walls.readWallsData()
-	HSV_values = balls.readBallData() 	# Calibration
+	HSV_values = balls.readBallData(isGreen) 	# Calibration
 	listOfErrors = [0]
 	oldSearch = 0			# Variables to reset listOfErrors
 	newSearch = 1			# when chasing a different ball or chasing a wall

@@ -2,10 +2,10 @@ import cv, time
 
 if __name__ == "__main__":
 	cam = cv.CaptureFromCAM(1)
-	objects = ["ball", "yellow wall", "blue wall"] 
-	filenames = ["HSV_BALL.data", "HSV_WALL_YELLOW.data", "HSV_WALL_BLUE.data"]
+	objects = ["green ball", "red ball", "yellow wall", "blue wall"] 
+	filenames = ["HSV_GREEN_BALL.data", "HSV_RED_BALL.data", "HSV_WALL_YELLOW.data", "HSV_WALL_BLUE.data"]
 	i = 0
-	while i < 3:
+	while i < 4:
 		print "Calibrating the ", objects[i]
 		while True:
 			feed = cv.QueryFrame(cam)
