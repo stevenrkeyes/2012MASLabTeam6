@@ -32,22 +32,34 @@ def findBall(feed, ball_HSV_values):
 	temp = balls.followBall(feed, ball_HSV_values[0], ball_HSV_values[1])
 	return temp
 
-def lineUp(backBumper, gate):
-	motors.backward(80)
+def lineUp(backBumper, gate, motors):
+	# back away from the wall a little
+	motors.backward(-80)
 	time.sleep(0.2)
+	
+	# rotate around to face the wall
 	motors.turnRight(80, 180)
+	
+	# drive to the wall, throttling the appropriate motor until aligned
 	atWall = False
-	#motors.backwardsUnlimited() <--How go backwards???? ;)
+	motors.forward(80)
 	while not atWall:
-		if bumper.leftBumped() and not bumper.rightBumped():
-			omni.stopA()
-		elif not bumper.leftBumped() and bumper.rightBumped():
-			omni.stopB()
-		elif bumper.leftBumped() and bumper.rightBumped():
-			time.sleep(1)
-			omni.stopMotors()
+		if backBumper.leftBumped() and not backBumper.rightBumped():
+			motors.left(80)		
+		elif not backBumper.leftBumped() and backBumper.rightBumped():
+			motors.right(80)
+		elif backBumper.leftBumped() and backBumper.rightBumped():
+			# you're lined up!
 			atWall = True
+		else:
+			motors.forward(80)
+
+	# go in a bit
+	motors.forward(70)
+
 	gate.openGate()
+	time.sleep(0.25)
+	motors.stopMotors()
 	time.sleep(2.5)
 	gate.closeGate()
 def cameraShit(cam):
@@ -96,7 +108,7 @@ if __name__ == "__main__":
 	onSwitch = ballDetector.switch(ard, 11)
 	gate = servo.Servo(ard)
 	irSensors = ir.wallDetector(ard)
-	bumper=bumper.Bumper(ard)
+	backBumper=bumper.Bumper(ard)
 	ballDetect = ballDetector.BallDetector(ard)
 	
 	_roller = roller.Roller(ard)
@@ -117,7 +129,7 @@ if __name__ == "__main__":
 	hasBalls = False
 	counter = 0
 	
-	cam = cv.CaptureFromCAM(1)		# Initialize camera
+	cam = cv.CaptureFromCAM(0)		# Initialize camera
 	wall_values = walls.readWallsData()
 	HSV_values = balls.readBallData() 	# Calibration
 	listOfErrors = [0]
@@ -134,18 +146,24 @@ if __name__ == "__main__":
 	#getCam.start()
 	
 	while not timerOver:
+		# Find walls, find balls, get wrecked
 		img = cv.QueryFrame(cam)
         	wallList = findWall(img, wall_values)
+		#cv.SaveImage("lol.png", img)
                 ballList = findBall(img, HSV_values)
-                time.sleep(0)
+		
+		# State Machine lulz
 		hasBalls = ballDetect.getBallCount() > 1
+		print ballDetect.getBallCount(), "<--Ballz"
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
-			if (isYellowWall):				
-				lineUp(irSensors, gate)
-			else:
+			if (isYellowWall):		
+				# Rotate, Line up, and Score		
+				lineUp(backBumper, gate)
+				ballDetect.resetBallCount()
+			else: # not a yellow wall
 				print "turning away from wall LOL"
-				motors.turnLeft(irSensors.getTurn()*80, 30) #Just Position based correction
+				motors.turnLeft(irSensors.getTurn()*80, 30) # Just Position based correction
 				time.sleep(0.1)
 		elif (len(wallList) > 0 and hasBalls):
 			print "CHASING WALL LOL"
@@ -171,7 +189,9 @@ if __name__ == "__main__":
 			counter+= 1
 			if (counter >= 6):
 				isYellowWall = False
-				motors.turnRight(dirTurn * -80, 40)
+				if counterTurn < 5:
+					motors.forward(dirTurn * -80)
+					time.sleep(0.5)
 				time.sleep(0.1)
 				print "searching..."
 				counter = 0
@@ -182,6 +202,4 @@ if __name__ == "__main__":
 			if counterTurn > 5:
 				motors.forward(-80)
 				dirTurn *= -1
-				time.sleep(1)
 				counterTurn = 0
-				motors.stopMotors()

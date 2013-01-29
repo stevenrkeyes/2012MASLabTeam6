@@ -20,7 +20,7 @@ class switch(arduino.DigitalInput):
         # set the switch to cooldown, indicating it has been pressed recently
         # and should not be read for a brief amount of time
         self.cooldown = True
-        t = threading.Thread(target=self.reactivateSwitch, args=[cooldownTime])
+        t = threading.Thread(target=self.reactivateSwitch, args=[self.cooldownTime])
         t.run()
 
     # reactiveate the switch after a cooldown delay

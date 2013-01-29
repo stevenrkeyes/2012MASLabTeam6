@@ -7,6 +7,7 @@ sina=0.175/W
 if __name__ == "__main__":
 	ard = arduino.Arduino()
 	omni=omni.Omni(ard)
+
 	ard.run()
 	omni.turnLeft(80, 90)
 	time.sleep(2)
