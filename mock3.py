@@ -118,8 +118,12 @@ if __name__ == "__main__":
 	ard.run()
 	light.powerOn()
 	# wait until the start button is pressed
-	while onSwitch.getValue() != True:
-		time.sleep(0.1)
+	loopVar = False
+	while not loopVar:
+		if onSwitch.getValue() != True
+			time.sleep(0.05)
+			loopVar = onSwitch.getValue()
+		time.sleep(0.05)
 
 	# create and start a timer for the match
 	timer = threading.Timer(180.0, halt)
@@ -189,18 +193,16 @@ if __name__ == "__main__":
 			print "Nope"
 			counter+= 1
 			if (counter >= 6):
-				isYellowWall = False
 				if counterTurn < 5:
-					motors.forward(dirTurn * -80)
-					time.sleep(0.5)
-				time.sleep(0.1)
+					motors.forward(-80)
+				time.sleep(2)
 				print "searching..."
 				counter = 0
 				listOfErrors = [0]
 				oldSearch = 2	
 				newSearch = 2
 				counterTurn += 1
-			if counterTurn > 5:
-				motors.forward(-80)
+			if counterTurn > 3:
+				motors.turn(dirTurn*80, 90)
 				dirTurn *= -1
 				counterTurn = 0
