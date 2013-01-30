@@ -2,7 +2,7 @@ import arduino, cv, time, math, threading
 import rectangulate, timer, roller, bumper, ballDetector
 import omni, walls, light, balls, servo, ir
 
-# note: not necessary to initialize these in python
+# necessary to initialize these in python?
 timerOver = False
 ard = 0
 motors = 0
@@ -138,6 +138,8 @@ if __name__ == "__main__":
 	_roller.startRoller()
 	
 	hasBalls = False
+
+	# counter for amount of searching iterations done
 	counter = 0
 	
 	cam = cv.CaptureFromCAM(1)		# Initialize camera
@@ -155,13 +157,29 @@ if __name__ == "__main__":
 	
 	#getCam = threading.Thread(target = cameraShit, args = [cam])
 	#getCam.start()
+
+	imgQueryTimes = []
+	findWallTimes = []
+	findBallTimes = []
 	
 	while not timerOver:
 		# Find walls, find balls, get wrecked
+		initialTime = time.Time()
 		img = cv.QueryFrame(cam)
+		imgQueryTimes.append(time.Time()-initialTime)
+		print "avg time to query image:", str(sum(imgQueryTimes)/len(imgQueryTimes))
+
+		initialTime = time.Time()
         	wallList = findWall(img, wall_values)
 		#cv.SaveImage("lol.png", img)
+        	findWallTimes.append(time.Time()-initialTime)
+        	print "avg time to find walls:", str(sum(findWallTimes)/len(findWallTimes))
+
+        	initialTime = time.Time()
                 ballList = findBall(img, HSV_values)
+                findBallTimes.append(time.Time()-initialTime)
+                print "avg time to find balls:", str(sum(findBallTimes)/len(findBallTimes))
+                
 		
 		# State Machine lulz
 		hasBalls = ballDetect.getBallCount() > 1
