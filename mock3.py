@@ -42,17 +42,17 @@ def lineUp(backBumper, gate, motors):
 	
 	# drive to the wall, throttling the appropriate motor until aligned
 	atWall = False
-	motors.forward(40)
+	motors.forward(50)
 	while not atWall:
 		if backBumper.leftBumped() and not backBumper.rightBumped():
-			motors.right(40)		
+			motors.right(50)		
 		elif not backBumper.leftBumped() and backBumper.rightBumped():
-			motors.left(40)
+			motors.left(50)
 		elif backBumper.leftBumped() and backBumper.rightBumped():
 			# you're lined up!
 			atWall = True
 		else:
-			motors.forward(40)
+			motors.forward(50)
 
 	# go in a bit
 	motors.backward(60)
@@ -102,22 +102,23 @@ def chaseStuff(temp, listOfErrors):
 	return listOfErrors
 
 if __name__ == "__main__":
-	# Create class instances
+	# Create class instances for the robot's various devices
 	ard = arduino.Arduino()
 	motors = omni.Omni(ard)
 	light=light.masterLight(ard)
-	onSwitch = arduino.DigitalInput(ard, 11)
+	startSwitch = arduino.DigitalInput(ard, 11) # this is not being used for now
 	gate = servo.Servo(ard)
 	irSensors = ir.wallDetector(ard)
 	backBumper=bumper.Bumper(ard)
-	ballDetect = ballDetector.BallDetector(ard)
-	
+	ballDetect = ballDetector.BallDetector(ard)	
 	_roller = roller.Roller(ard)
 
 	# Run the arduino, power up systems
 	ard.run()
 	light.powerOn()
+
 	# wait until the start button is pressed
+	# left bumper starts Red, green bumper starts Green
 	isGreen = False
 	isBumped = False
 	while not isBumped:
@@ -134,6 +135,8 @@ if __name__ == "__main__":
 	# create and start a timer for the match
 	timer = threading.Timer(180.0, halt)
 	timer.start()
+
+	# start the ball detector and roller threads
 	ballDetect.start()
 	_roller.startRoller()
 	
@@ -148,11 +151,14 @@ if __name__ == "__main__":
 	listOfErrors = [0]
 	oldSearch = 0			# Variables to reset listOfErrors
 	newSearch = 1			# when chasing a different ball or chasing a wall
-
+	
+	# start by moving forward a little
 	motors.forward(-40)
 	dirTurn = 1
-	time.sleep(0.1)
-	isYellowWall = False
+	
+	#isYellowWall = False
+	# variable saying how many turns ago the yellow wall was seen
+	yellowWallLastSeen = -1 # -1 refers to infinity
 	counterTurn = 0
 	
 	#getCam = threading.Thread(target = cameraShit, args = [cam])
@@ -164,62 +170,64 @@ if __name__ == "__main__":
 	
 	while not timerOver:
 		# Find walls, find balls, get wrecked
-		initialTime = time.Time()
 		img = cv.QueryFrame(cam)
-		imgQueryTimes.append(time.Time()-initialTime)
-		print "avg time to query image:", str(sum(imgQueryTimes)/len(imgQueryTimes))
-
-		initialTime = time.Time()
+		# takes 0.04 seconds to query and image
         	wallList = findWall(img, wall_values)
 		#cv.SaveImage("lol.png", img)
-        	findWallTimes.append(time.Time()-initialTime)
-        	print "avg time to find walls:", str(sum(findWallTimes)/len(findWallTimes))
-
-        	initialTime = time.Time()
+		# takes 0.35 seconds to find walls
                 ballList = findBall(img, HSV_values)
-                findBallTimes.append(time.Time()-initialTime)
-                print "avg time to find balls:", str(sum(findBallTimes)/len(findBallTimes))
-                
+		# takes 0.19 seconds to find balls
 		
-		# State Machine lulz
-		hasBalls = ballDetect.getBallCount() > 1
+		# check for balls
+		hasBalls = ballDetect.getBallCount() > 1		
 		print ballDetect.getBallCount(), "<--Ballz"
+		
 		if irSensors.detectWall():
 			print "THERE IS A WALL LOL"
-			if (isYellowWall):		
+			# if very close to a wall, back up
+			if irSensors.detectCloseWall():
+				motors.backward(-80)
+				time.sleep(0.3)
+				motors.stopMotors()
+			
+			# if a yellow wall was recently seen, this is probably it
+			if (-1 < yellowWallLastSeen < 5):		
 				# Rotate, Line up, and Score		
-				lineUp(backBumper, gate)
+				lineUp(backBumper, gate, motors)
 				ballDetect.resetBallCount()
 			else: # not a yellow wall
-				print "turning away from wall LOL"
+				print "turning away from wall"
 				motors.turnLeft(irSensors.getTurn()*80, 30) # Just Position based correction
 				time.sleep(0.1)
+
+		# if the list of yellow walls contains an element, and the robot has balls:
 		elif (len(wallList) > 0 and hasBalls):
 			print "CHASING WALL LOL"
 			newSearch = 0
 			if oldSearch != newSearch:
 				listOfErrors = [0]
-				isYellowWall = True
+				yellowWallLastSeen = 0
 			listOfErrors = chaseStuff(wallList, listOfErrors)
 			counter = 0
 			oldSearch = 0
+
+		# otherwise, if the robot sees balls, do this
 		elif (len(ballList) > 2):
 			print "CHASING BALL LOL"
 			newSearch = 1
 			if oldSearch != newSearch:
 				listOfErrors = [0]
-				isYellowWall = False
+				yellowWallLastSeen += 1
 			listOfErrors = chaseStuff(ballList, listOfErrors)
 			counter = 0
 			oldSearch = 1
 		else:
-			motors.stopMotors()
+			motors.forward(-50)
 			print "Nope"
 			counter+= 1
 			if (counter >= 3):
-				if counterTurn < 5:
-					motors.forward(-80)
-				time.sleep(2)
+				motors.forward(-80)
+				time.sleep(0.8)
 				print "searching..."
 				counter = 0
 				listOfErrors = [0]
@@ -230,3 +238,4 @@ if __name__ == "__main__":
 				motors.turnRight(dirTurn*80, 90)
 				dirTurn *= -1
 				counterTurn = 0
+				yellowWallLastSeen += 1

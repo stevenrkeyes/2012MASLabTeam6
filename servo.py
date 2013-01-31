@@ -8,8 +8,8 @@ class Servo:
 		self.servo.setAngle(65)
 		print "Gate opened"
 		time.sleep(0.5)
-
+		
 	def closeGate(self):
 		self.servo.setAngle(0)
-		print "Gate opened"
+		print "Gate closed"
 		time.sleep(0.5)

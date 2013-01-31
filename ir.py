@@ -24,4 +24,9 @@ class wallDetector():
 		#print "Wall Distances: ", d[0], d[1]
 		return d[0] > 600 or d[1] > 600
 
+	def detectCloseWall(self):
+		d = self.getDistances()
+		#print "Wall Distances: ", d[0], d[1]
+		return d[0] > 850 or d[1] > 850
+
 

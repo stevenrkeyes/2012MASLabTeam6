@@ -38,11 +38,11 @@ def findYellowWall(img, wallData):
 				break
 		if foundYellowWall:
 			break
-		print list(blueRectangle)
+		#print list(blueRectangle)
 	output = []
 	if foundYellowWall:
 		bRect = yellowWall[0]
 		yRect = yellowWall[1]
-		output += [(bRect[0] + yRect[0]) / 2 , (bRect[1] + yRect[1]) / 2, bRect[2] + yRect[2], bRect[3] + yRect[3], feed.width, feed.height]
+		output += [(bRect[0] + yRect[0]) / 2 , (bRect[1] + yRect[1]) / 2, bRect[2] + yRect[2], bRect[3] + yRect[3], img.width, img.height]
 	#cv.SaveImage("walls.png", img)
 	return output
