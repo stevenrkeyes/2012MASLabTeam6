@@ -15,7 +15,7 @@ def readWallsData():
 	return output
 
 def findYellowWall(img, wallData):
-	blueMin = wallData[2]
+	'''blueMin = wallData[2]
 	blueMax = wallData[3]
 	yellowMin = wallData[0]
 	yellowMax = wallData[1]
@@ -45,4 +45,35 @@ def findYellowWall(img, wallData):
 		yRect = yellowWall[1]
 		output += [(bRect[0] + yRect[0]) / 2 , (bRect[1] + yRect[1]) / 2, bRect[2] + yRect[2], bRect[3] + yRect[3], img.width, img.height]
 	#cv.SaveImage("walls.png", img)
+	return output'''
+	yellowMin = wallData[0]
+	yellowMax = wallData[1]
+	wallList = rectangulate.findObjects(img, yellowMin, yellowMax)
+	print list(wallList)
+	biggestWall = ()
+	maxSize = 0
+	line25Percent = img.width/4
+	line75Percent = line25Percent * 3
+	for wall in wallList:
+		currentSize = wall[2]*wall[3]
+		if line25Percent < wall[0] < line75Percent:
+			if currentSize > maxSize:
+				biggestWall = wall
+				maxSize = currentSize
+	# Debug/Test code
+	#if biggestBall == ():
+	#	print "no Ball, LOL"
+	#elif 0 <= biggestBall[0] < line25Percent:
+	#	print "x coord: ", biggestBall[0]
+	#	print "move far right"
+	#elif line25Percent <= biggestBall[0] < midlineHorizontal:
+	#	print "x coord: ", biggestBall[0]	
+	#	print "move somewhat right"
+	#elif midlineHorizontal <= biggestBall[0] < line75Percent:
+	#	print "x coord: ", biggestBall[0]
+	#	print "move somewhat left"
+	#elif line75Percent <= biggestBall[0] < feed.width:
+	#	print "x coord: ", biggestBall[0]
+	#	print "move far left"
+	output = list(biggestWall)+ [img.width,img.height]
 	return output

@@ -1,6 +1,7 @@
 import arduino, cv, time, math, threading
 import rectangulate, timer, roller, bumper, ballDetector
 import omni, walls, light, balls, servo, ir
+import os
 
 # necessary to initialize these in python?
 timerOver = False
@@ -32,19 +33,25 @@ def findBall(feed, ball_HSV_values):
 	temp = balls.followBall(feed, ball_HSV_values[0], ball_HSV_values[1])
 	return temp
 
-def lineUp(backBumper, gate, motors):
+def lineUp(backBumper, gate, motors, direction):
 	# back away from the wall a little
 	motors.backward(-80)
 	time.sleep(0.5)
-	
+	print "Lining Up"
 	# rotate around to face the wall
-	motors.turnRight(80, 180)
+	motors.turnRight(direction * 80, 240)
 	
 	# drive to the wall, throttling the appropriate motor until aligned
 	atWall = False
 	motors.forward(50)
+	initTime = time.time()
 	while not atWall:
-		if backBumper.leftBumped() and not backBumper.rightBumped():
+		# if you've been doing this for 10 seconds, you're probably stuck; try again
+		if time.time() - initTime > 6:
+			motors.backward(80)
+			time.sleep(1.5)
+			initTime=time.time()
+		elif backBumper.leftBumped() and not backBumper.rightBumped():
 			motors.right(50)		
 		elif not backBumper.leftBumped() and backBumper.rightBumped():
 			motors.left(50)
@@ -57,8 +64,8 @@ def lineUp(backBumper, gate, motors):
 	# go in a bit
 	motors.backward(60)
 	time.sleep(0.5)
-	gate.openGate()
 	motors.forward(80)
+	gate.openGate()
 	time.sleep(1)
 	motors.stopMotors()
 	time.sleep(2.5)
@@ -69,6 +76,10 @@ def cameraShit(cam):
         	wallList = findWall(img, wall_values)
                 ballList = findBall(img, HSV_values)
                 time.sleep(0)
+def music():
+	while not timerOver:
+		 os.system("aplay nyan.wav")
+
 def halt():
 	_lock = threading.Lock()
 	_lock.acquire()
@@ -103,6 +114,7 @@ def chaseStuff(temp, listOfErrors):
 
 if __name__ == "__main__":
 	# Create class instances for the robot's various devices
+	#cv.NamedWindow("image")
 	ard = arduino.Arduino()
 	motors = omni.Omni(ard)
 	light=light.masterLight(ard)
@@ -114,8 +126,9 @@ if __name__ == "__main__":
 	_roller = roller.Roller(ard)
 
 	# Run the arduino, power up systems
-	ard.run()
+	ard.run() 
 	light.powerOn()
+	gate.closeGate()
 
 	# wait until the start button is pressed
 	# left bumper starts Red, green bumper starts Green
@@ -135,6 +148,8 @@ if __name__ == "__main__":
 	# create and start a timer for the match
 	timer = threading.Timer(180.0, halt)
 	timer.start()
+	t = threading.Thread(target = music)
+	t.start()
 
 	# start the ball detector and roller threads
 	ballDetect.start()
@@ -145,7 +160,7 @@ if __name__ == "__main__":
 	# counter for amount of searching iterations done
 	counter = 0
 	
-	cam = cv.CaptureFromCAM(1)		# Initialize camera
+	cam = cv.CaptureFromCAM(1)		# Initialize camera ADFJUSDHGIUSODUHBGOSDUIH
 	wall_values = walls.readWallsData()
 	HSV_values = balls.readBallData(isGreen) 	# Calibration
 	listOfErrors = [0]
@@ -158,7 +173,7 @@ if __name__ == "__main__":
 	
 	#isYellowWall = False
 	# variable saying how many turns ago the yellow wall was seen
-	yellowWallLastSeen = -1 # -1 refers to infinity
+	yellowWallLastSeen = 90 # -1 refers to infinity
 	counterTurn = 0
 	
 	#getCam = threading.Thread(target = cameraShit, args = [cam])
@@ -173,6 +188,10 @@ if __name__ == "__main__":
 		img = cv.QueryFrame(cam)
 		# takes 0.04 seconds to query and image
         	wallList = findWall(img, wall_values)
+		if len(wallList) > 2:
+		 	print "HELLO YELLOW"
+			yellowWallLastSeen = 0
+			counterTurn = 0
 		#cv.SaveImage("lol.png", img)
 		# takes 0.35 seconds to find walls
                 ballList = findBall(img, HSV_values)
@@ -181,19 +200,24 @@ if __name__ == "__main__":
 		# check for balls
 		hasBalls = ballDetect.getBallCount() > 1		
 		print ballDetect.getBallCount(), "<--Ballz"
+		print "Yellow wall last seen: ", yellowWallLastSeen
 		
 		if irSensors.detectWall():
+			counter = 0
 			print "THERE IS A WALL LOL"
 			# if very close to a wall, back up
 			if irSensors.detectCloseWall():
+				"CLOSE TO WALL LOL"
 				motors.backward(-80)
 				time.sleep(0.3)
 				motors.stopMotors()
 			
 			# if a yellow wall was recently seen, this is probably it
-			if (-1 < yellowWallLastSeen < 5):		
-				# Rotate, Line up, and Score		
-				lineUp(backBumper, gate, motors)
+			if (-1 < yellowWallLastSeen < 5 and hasBalls):		
+				print "going towards wall"
+				# Rotate, Line up, and Score	
+				_direction = irSensors.getTurn()	
+				lineUp(backBumper, gate, motors, _direction)
 				ballDetect.resetBallCount()
 			else: # not a yellow wall
 				print "turning away from wall"
@@ -201,7 +225,7 @@ if __name__ == "__main__":
 				time.sleep(0.1)
 
 		# if the list of yellow walls contains an element, and the robot has balls:
-		elif (len(wallList) > 0 and hasBalls):
+		elif (len(wallList) > 2 and hasBalls):
 			print "CHASING WALL LOL"
 			newSearch = 0
 			if oldSearch != newSearch:
@@ -225,6 +249,7 @@ if __name__ == "__main__":
 			motors.forward(-50)
 			print "Nope"
 			counter+= 1
+			yellowWallLastSeen += 1
 			if (counter >= 3):
 				motors.forward(-80)
 				time.sleep(0.8)
@@ -235,7 +260,16 @@ if __name__ == "__main__":
 				newSearch = 2
 				counterTurn += 1
 			if counterTurn > 3:
-				motors.turnRight(dirTurn*80, 90)
+				motors.turnRight(80, 90)
 				dirTurn *= -1
 				counterTurn = 0
-				yellowWallLastSeen += 1
+		'''try:
+			cv.Rectangle(img, (ballList[0] - ballList[2], ballList[1]-ballList[3]), (ballList[0] + ballList[2], ballList[1]+ballList[3]), (200,200,200), 4)
+		except:
+			pass
+		try:
+			cv.Rectangle(img, (wallList[0] - wallList[2], wallList[1]-wallList[3]), (wallList[0] + wallList[2], wallList[1]+wallList[3]), (200,200,200), 4)
+		except:
+			pass
+		cv.ShowImage("image",img)
+		i = cv.WaitKey(10)'''

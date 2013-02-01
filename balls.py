@@ -19,7 +19,7 @@ def followBall(cam, lowerHSV, upperHSV):
 	midlineHorizontal = feed.width/2
 	line75Percent = line25Percent * 3
 
-	print list(balls)
+	#print list(balls)
 	# Find the biggest recangle --> represents closest ball or biggest set of balls
 	biggestBall = ()
 	maxSize = 0

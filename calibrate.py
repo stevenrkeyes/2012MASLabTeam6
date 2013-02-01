@@ -1,11 +1,11 @@
 import cv, time
 
 if __name__ == "__main__":
-	cam = cv.CaptureFromCAM(1)
-	objects = ["green ball", "red ball", "yellow wall", "blue wall"] 
-	filenames = ["HSV_GREEN_BALL.data", "HSV_RED_BALL.data", "HSV_WALL_YELLOW.data", "HSV_WALL_BLUE.data"]
+	cam = cv.CaptureFromCAM(0)
+	objects = ["green ball", "red ball", "yellow wall", "blue wall", "teal button"] 
+	filenames = ["HSV_GREEN_BALL.data", "HSV_RED_BALL.data", "HSV_WALL_YELLOW.data", "HSV_WALL_BLUE.data", "HSV_BUTTON.data"]
 	i = 0
-	while i < 4:
+	while i < 5:
 		print "Calibrating the ", objects[i]
 		while True:
 			feed = cv.QueryFrame(cam)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 				f = open(filenames[i], 'w')
 				f.write(str(MinH)+"\n")
 				f.write(str(MinS)+"\n")
-				f.write("50.0\n") #V wider threshold
+				f.write("30.0\n") #V wider threshold
 				f.write(str(MaxH)+"\n")
 				f.write(str(MaxS)+"\n")
 				f.write("200.0\n") #V wider threshold

@@ -18,5 +18,5 @@ if __name__ == "__main__":
 
     ard.run()
     r.startRoller()
-    time.sleep(5)
+    time.sleep(15)
     r.stopRoller()
