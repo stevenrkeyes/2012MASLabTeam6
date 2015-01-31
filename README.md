@@ -15,4 +15,3 @@ Detailed breakdown by folder:
     * sensors - code examples related to IR sensors, bump sensors, etc.
     * general - general code examples
 * MASLab simulation - a simulation for a robot exploring a field for use in testing
-* 
