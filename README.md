@@ -1,7 +1,9 @@
-maslab-staff-2013
+2012MASLabTeam6
 =================
 
-MASLAB Staff-provided code for IAP 2013.
+Code for the robot for MASLab Team 6, based on MASLAB Staff-provided code for IAP 2013.
+
+To run, load the arduino firmware onto an arduino and connect it to the robot's computer. On the robot's computer, run python mock3.py, which is the code for the mock competition. This software requires openCV.
 
 Detailed breakdown by folder:
 * arduino_firmware - contains all code related to loading firmware onto the Arduino
@@ -12,3 +14,5 @@ Detailed breakdown by folder:
     * actuators - code examples related to motors, servos, steppers, etc.
     * sensors - code examples related to IR sensors, bump sensors, etc.
     * general - general code examples
+* MASLab simulation - a simulation for a robot exploring a field for use in testing
+* 
